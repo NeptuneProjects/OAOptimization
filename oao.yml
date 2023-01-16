@@ -1,0 +1,24 @@
+name: oao
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - botorch
+  - cmocean
+  # - cudatoolkit=11.3
+  - feather-format
+  - jupyterlab
+  - matplotlib
+  - numpy
+  - pandas
+  - pip
+  - pytorch
+  # - scikit-optimize
+  - scipy
+  - tqdm
+  - pip:
+    - git+https://github.com/NeptuneProjects/TritonOA.git
+    - ax-platform
+  
