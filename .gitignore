@@ -132,5 +132,9 @@ dmypy.json
 .DS_Store
 .vscode
 
+# Production
+config.json
+results.json
+
 # Temp
 docs
