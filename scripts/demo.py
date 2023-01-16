@@ -29,10 +29,10 @@ if __name__ == "__main__":
         description="Reads optimization configuration files and submits for execution."
     )
     parser.add_argument(
-        "-source", type=str, help="Path to source file.", default="config.json"
+        "-source", type=str, help="Path to source file.", default="scripts/config.json"
     )
     parser.add_argument(
-        "-destination", type=str, help="Path to destination file.", default="."
+        "-destination", type=str, help="Path to destination file.", default="scripts/"
     )
     args = parser.parse_args()
 

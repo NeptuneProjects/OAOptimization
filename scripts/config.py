@@ -100,4 +100,4 @@ config = {
 }
 
 if __name__ == "__main__":
-    save_config("config.json", config)
+    save_config("scripts/config.json", config)
