@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "OAOptimization"
+authors = [{name = "William Jenkins", email = "wjenkins@ucsd.edu"}]
+description = "Optimization library for ocean acoustics."
+readme = "README.md"
+license = { file = "LICENSE" }
+version = "0.0.1"
+dependencies = [
+    "botorch",
+    "numpy",
+    "pandas",
+    "torch",
+    "scipy",
+    "ax-platform"
+]
+dynamic = ["version"]
+
+[tool.setuptools]
+packages = ["oao"]
+
+# [tool.setuptools.dynamic]
+# version = {attr = "OAOptimization.__version__"}
+
+[tool.setuptools.dynamic]
+version = {attr = "OAOptimization.__version__"}
