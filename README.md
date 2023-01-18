@@ -9,3 +9,17 @@ The libraries, listed according to increasing levels of abstraction, are:
 2. [BoTorch](https://botorch.org) by [Meta Open Source](https://code.facebook.com/projects/).
 3. [Adaptive Experimentation Platform (Ax)](https://ax.dev) by [Meta Open Source](https://code.facebook.com/projects/).
 All three of these libraries are built on [PyTorch](https://pytorch.org), thus enabling GPU acceleration of some computational tasks.
+
+## Installation
+
+OAOptimization can be installed using `pip` for Python 3.10 or below:  
+`pip install git+https://github.com/NeptuneProjects/OAOptimization.git`
+
+## Usage
+
+Once installed, import objects as normal:
+```python
+from oao.optim.optimizer import BayesianOptimizer
+
+optimizer = BayesianOptimizer(*args, **kwargs)
+```
