@@ -8,7 +8,7 @@ authors = [{name = "William Jenkins", email = "wjenkins@ucsd.edu"}]
 description = "Optimization library for ocean acoustics."
 readme = "README.md"
 license = { file = "LICENSE" }
-# version = "0.0.1"
+requires-python = "<=3.10"
 dependencies = [
     "botorch",
     "numpy",
