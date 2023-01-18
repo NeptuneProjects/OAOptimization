@@ -26,4 +26,4 @@ packages = ["oao"]
 # version = {attr = "OAOptimization.__version__"}
 
 [tool.setuptools.dynamic]
-version = {attr = "OAOptimization.__version__"}
+version = {attr = "oao.__version__"}
