@@ -8,7 +8,7 @@ dependencies:
   - botorch
   - cmocean
   # - cudatoolkit=11.3
-  - feather-format
+  # - feather-format
   - jupyterlab
   - matplotlib
   - numpy
