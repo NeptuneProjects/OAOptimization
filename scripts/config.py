@@ -11,7 +11,11 @@ import sys
 
 from ax.modelbridge.generation_strategy import GenerationStep, GenerationStrategy
 from ax.modelbridge.registry import Models
+from ax.models.torch.botorch_modular.surrogate import Surrogate
 from ax.service.ax_client import ObjectiveProperties
+from botorch.acquisition.monte_carlo import qExpectedImprovement
+from botorch.models.gp_regression import SingleTaskGP
+from gpytorch.mlls.exact_marginal_log_likelihood import ExactMarginalLogLikelihood
 import torch
 
 sys.path.insert(0, pathlib.Path(__file__).parents[1].resolve().as_posix())
@@ -24,7 +28,17 @@ from oao.utilities import save_config
 
 # LOW-LEVEL CONFIGS ===========================================================
 SEED = 2009
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+N_RESTARTS = 20
+N_SAMPLES = 512
+DEVICE = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else "mps"
+    if torch.backends.mps.is_available()
+    else "cpu"
+)
+
+
 # 1. SEARCH SPACE ==============================================================
 parameters = [
     {
@@ -50,14 +64,39 @@ obj_func_parameters = {
 
 # 3. SEARCH STRATEGY ===========================================================
 # Uninformed Search Configurations
-num_trials = 10
-strategy = "lhs"
+# num_trials = 10
+# strategy = "lhs"
 
 # Bayesian Search Configurations
+# Sequential optimization
+# NUM_WARMUP = 7
+# num_trials = 20
+# strategy = {
+#     "loop_type": "sequential",
+#     "generation_strategy": GenerationStrategy(
+#         [
+#             GenerationStep(
+#                 model=Models.SOBOL,
+#                 num_trials=NUM_WARMUP,
+#                 max_parallelism=NUM_WARMUP,
+#                 model_kwargs={"seed": SEED},
+#             ),
+#             GenerationStep(
+#                 model=Models.GPEI,
+#                 num_trials=-1,
+#                 max_parallelism=None,
+#                 model_kwargs={"torch_device": DEVICE},
+#             ),
+#         ]
+#     )
+# }
+
+# Sequential greedy batch optimization
 NUM_WARMUP = 7
 num_trials = 20
 strategy = {
-    "loop_type": "sequential",
+    "loop_type": "sequential", # <--- This is where to specify loop
+    "batch_size": None,
     "generation_strategy": GenerationStrategy(
         [
             GenerationStep(
@@ -67,14 +106,50 @@ strategy = {
                 model_kwargs={"seed": SEED},
             ),
             GenerationStep(
-                model=Models.GPEI,
+                model=Models.BOTORCH_MODULAR,
                 num_trials=-1,
                 max_parallelism=None,
-                model_kwargs={"torch_device": DEVICE},
+                model_kwargs={
+                    "surrogate": Surrogate(
+                        botorch_model_class=SingleTaskGP,
+                        mll_class=ExactMarginalLogLikelihood
+                    ),
+                    "botorch_acqf_class": qExpectedImprovement,
+                    "torch_device": DEVICE
+                },
+                model_gen_kwargs={
+                    "model_gen_options": {
+                        "num_restarts": N_RESTARTS,
+                        "raw_samples": N_SAMPLES
+                    }
+                }
             ),
         ]
-    )
+    ),
 }
+
+# Batch optimization
+# NUM_WARMUP = 7
+# num_trials = 20
+# strategy = {
+#     "loop_type": "sequential",
+#     "generation_strategy": GenerationStrategy(
+#         [
+#             GenerationStep(
+#                 model=Models.SOBOL,
+#                 num_trials=NUM_WARMUP,
+#                 max_parallelism=NUM_WARMUP,
+#                 model_kwargs={"seed": SEED},
+#             ),
+#             GenerationStep(
+#                 model=Models.GPEI,
+#                 num_trials=-1,
+#                 max_parallelism=None,
+#                 model_kwargs={"torch_device": DEVICE},
+#             ),
+#         ]
+#     )
+# }
 
 
 # HIGH-LEVEL CONFIGS ===========================================================
