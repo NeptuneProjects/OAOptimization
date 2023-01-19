@@ -150,12 +150,16 @@ class BayesianOptimizer(Optimizer):
         elif self.strategy["loop_type"] == "batch":
             return self._run_batch_loop()
         elif self.strategy["loop_type"] == "greedy_batch":
-            return self._run_greedy_loop()
+            return self._run_greedybatch_loop()
 
     def _run_batch_loop(self):
+        # TODO: Set up batch optimization (q x d)
         return
 
-    def _run_greedy_loop(self):
+    def _run_greedybatch_loop(self):
+        # TODO: Set up sequential greedy batch optimization
+        for _ in range(self.num_trials):
+            pass
         return
 
     def _run_sequential_loop(self):
