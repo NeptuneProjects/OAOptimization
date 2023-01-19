@@ -22,13 +22,13 @@ from sklearn.model_selection import ParameterGrid
 
 
 class ConfigEncoder(json.JSONEncoder):
-    """_summary_
+    """#TODO:_summary_
 
     :param json: _description_
     :type json: _type_
     """
     def default(self, o):
-        """_summary_
+        """#TODO:_summary_
 
         :param o: _description_
         :type o: _type_
@@ -44,7 +44,7 @@ class ConfigEncoder(json.JSONEncoder):
 
 
 class ConfigDecoder(json.JSONDecoder):
-    """_summary_
+    """#TODO:_summary_
 
     :param json: _description_
     :type json: _type_
@@ -53,7 +53,7 @@ class ConfigDecoder(json.JSONDecoder):
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
     def object_hook(self, obj):
-        """_summary_
+        """#TODO:_summary_
 
         :param obj: _description_
         :type obj: _type_
@@ -72,7 +72,7 @@ class ConfigDecoder(json.JSONDecoder):
 
 
 def save_config(path: Union[str, PurePath], config: dict):
-    """_summary_
+    """#TODO:_summary_
 
     :param path: _description_
     :type path: Union[str, PurePath]
@@ -84,7 +84,7 @@ def save_config(path: Union[str, PurePath], config: dict):
 
 
 def load_config(path: Union[str, PurePath]) -> dict:
-    """_summary_
+    """#TODO:_summary_
 
     :param path: _description_
     :type path: Union[str, PurePath]
@@ -129,7 +129,7 @@ def get_grid_parameters(bounds: dict, num_samples: Union[int, list]) -> list:
 
 
 def get_test_features(bounds: dict, num_samples: Union[int, list]) -> list:
-    """_summary_
+    """#TODO:_summary_
 
     :param bounds: _description_
     :type bounds: dict

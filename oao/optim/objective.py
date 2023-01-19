@@ -11,12 +11,12 @@
 from ax.utils.measurement import synthetic_functions as synth
 import numpy as np
 
-from tritonoa.kraken import run_kraken
-from tritonoa.sp import beamformer
+# from tritonoa.kraken import run_kraken
+# from tritonoa.sp import beamformer
 
 
 def evaluate_branin(parameters: dict) -> dict:
-    """_summary_
+    """#TODO:_summary_
 
     :param parameters: _description_
     :type parameters: dict
@@ -28,7 +28,7 @@ def evaluate_branin(parameters: dict) -> dict:
 
 
 def evaluate_hartmann6(parameters: dict) -> dict:
-    """_summary_
+    """#TODO:_summary_
 
     :param parameters: _description_
     :type parameters: dict
@@ -39,15 +39,15 @@ def evaluate_hartmann6(parameters: dict) -> dict:
     return {"hartmann6": (synth.hartmann6(x), 0.0)}
 
 
-def evaluate_kraken(parameters: dict) -> dict:
-    """_summary_
+# def evaluate_kraken(parameters: dict) -> dict:
+#     """#TODO:_summary_
 
-    :param parameters: _description_
-    :type parameters: dict
-    :return: _description_
-    :rtype: dict
-    """
-    K = parameters.pop("K")
-    p_rep = run_kraken(parameters)
-    objective_raw = beamformer(K, p_rep, atype="bartlett").item()
-    return {"bartlett": (objective_raw, 0.0)}
+#     :param parameters: _description_
+#     :type parameters: dict
+#     :return: _description_
+#     :rtype: dict
+#     """
+#     K = parameters.pop("K")
+#     p_rep = run_kraken(parameters)
+#     objective_raw = beamformer(K, p_rep, atype="bartlett").item()
+#     return {"bartlett": (objective_raw, 0.0)}

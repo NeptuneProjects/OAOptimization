@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class Optimizer:
-    """_summary_
+    """Base class for optimization strategies.
 
     :return: _description_
     :rtype: _type_
@@ -48,11 +48,12 @@ class Optimizer:
 
     @staticmethod
     def get_bounds_from_parameters(parameters: dict) -> dict:
-        """_summary_
+        """Extracts the bounds of the parameter space from a `parameters`
+        dictionary.
 
-        :param parameters: _description_
+        :param parameters: Search space parameters.
         :type parameters: dict
-        :return: _description_
+        :return: Boundary of the search space.
         :rtype: dict
         """
         return {d["name"]: d["bounds"] for d in parameters}
@@ -66,7 +67,7 @@ class Optimizer:
         *args,
         **kwargs
     ):
-        """_summary_
+        """#TODO:_summary_
 
         :param experiment_kwargs: _description_
         :type experiment_kwargs: _type_
@@ -99,7 +100,7 @@ class Optimizer:
 
 
 class BayesianOptimizer(Optimizer):
-    """_summary_
+    """#TODO:_summary_
 
     :param Optimizer: _description_
     :type Optimizer: _type_
@@ -122,7 +123,7 @@ class BayesianOptimizer(Optimizer):
         *args,
         **kwargs
     ):
-        """_summary_
+        """#TODO:_summary_
 
         :param experiment_kwargs: _description_
         :type experiment_kwargs: _type_
@@ -173,7 +174,7 @@ class BayesianOptimizer(Optimizer):
         return self.ax_client.get_trials_data_frame()
 
     def evaluate_model_and_acquisition(self, trial_index):
-        """_summary_
+        """#TODO:_summary_
 
         :param trial_index: _description_
         :type trial_index: _type_
@@ -186,7 +187,7 @@ class BayesianOptimizer(Optimizer):
 
 
 class UninformedOptimizer(Optimizer):
-    """_summary_
+    """#TODO:_summary_
 
     :param Optimizer: _description_
     :type Optimizer: _type_
@@ -200,7 +201,7 @@ class UninformedOptimizer(Optimizer):
         super().__init__(objective, strategy, obj_func_parameters)
 
     def run(self, experiment_kwargs, num_trials, seed=None, *args, **kwargs):
-        """_summary_
+        """#TODO:_summary_
 
         :param experiment_kwargs: _description_
         :type experiment_kwargs: _type_
