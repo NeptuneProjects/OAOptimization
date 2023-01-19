@@ -19,6 +19,7 @@ import sys
 from typing import Optional, Union
 
 from ax.service.ax_client import AxClient
+import numpy as np
 
 sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
 from oao.optim import uninformed
@@ -65,7 +66,7 @@ class Optimizer:
         evaluation_config=None,
         seed=None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """#TODO:_summary_
 
@@ -121,7 +122,7 @@ class BayesianOptimizer(Optimizer):
         evaluation_config=None,
         seed=None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         """#TODO:_summary_
 
@@ -139,7 +140,8 @@ class BayesianOptimizer(Optimizer):
         self.initialize_run(
             experiment_kwargs, num_trials, evaluation_config, seed, *args, **kwargs
         )
-        return self._run_loop()
+        self._run_loop()
+        return self.ax_client.get_trials_data_frame()
 
     def _run_loop(self):
         if self.evaluation_config is not None:
@@ -153,29 +155,78 @@ class BayesianOptimizer(Optimizer):
             return self._run_greedybatch_loop()
 
     def _run_batch_loop(self):
-        # TODO: Set up batch optimization (q x d)
-        return
+
+        # Batch optimization loop
+        num_warmup = self.ax_client.generation_strategy._steps[0].num_trials
+        for _ in range(num_warmup):
+            params, trial_index = self.ax_client.get_next_trial()
+            raw_data = self.objective(params | self.obj_func_parameters)
+            self.ax_client.complete_trial(trial_index, raw_data)
+
+        # Run optimization
+        # logger.debug("Running optimization loop.")
+        num_optim = self.num_trials - num_warmup
+        num_batches = np.ceil(num_optim / self.strategy["batch_size"]).astype(int)
+
+        optim_num = 0
+        for batch_num in range(num_batches):
+            batch_size = (
+                self.strategy["batch_size"]
+                if batch_num < num_batches - 1
+                else num_optim - batch_num * self.strategy["batch_size"]
+            )
+
+            gen_run = self.ax_client._gen_new_generator_run(n=batch_size)
+            for arm in gen_run.arms:
+                if optim_num == num_optim:
+                    break
+                params, trial_index = self.ax_client.attach_trial(arm.parameters)
+                results = self.objective(params | self.obj_func_parameters)
+                self.ax_client.complete_trial(trial_index, results)
+                optim_num += 1
 
     def _run_greedybatch_loop(self):
-        # TODO: Set up sequential greedy batch optimization
-        for _ in range(self.num_trials):
-            pass
-        return
+        # Run warmup
+        num_warmup = self.ax_client.generation_strategy._steps[0].num_trials
+        for _ in range(num_warmup):
+            params, trial_index = self.ax_client.get_next_trial()
+            raw_data = self.objective(params | self.obj_func_parameters)
+            self.ax_client.complete_trial(trial_index, raw_data)
+
+        # Run optimization
+        num_optim = self.num_trials - num_warmup
+        num_batches = np.ceil(num_optim / self.strategy["batch_size"]).astype(int)
+
+        for batch_num in range(num_batches):
+            batch_size = (
+                self.strategy["batch_size"]
+                if batch_num < num_batches - 1
+                else num_optim - batch_num * self.strategy["batch_size"]
+            )
+
+            trials_dict, _ = self.ax_client.get_next_trials(max_trials=batch_size)
+
+            results = {
+                trial_index: self.objective(params | self.obj_func_parameters)
+                for trial_index, params in trials_dict.items()
+            }
+
+            [
+                self.ax_client.complete_trial(trial_index, results.get(trial_index))
+                for trial_index in results
+            ]
 
     def _run_sequential_loop(self):
         for _ in range(self.num_trials):
             params, trial_index = self.ax_client.get_next_trial()
-            self.ax_client.complete_trial(
-                trial_index, self.objective(params | self.obj_func_parameters)
-            )
+            results = self.objective(params | self.obj_func_parameters)
+            self.ax_client.complete_trial(trial_index, results)
 
             # Evaluate acquisition function and GP model
             if (self.ax_client.generation_strategy.current_step.index != 1) and (
                 self.evaluation_config is not None
             ):
                 df = self.evaluate_model_and_acquisition(trial_index)
-
-        return self.ax_client.get_trials_data_frame()
 
     def evaluate_model_and_acquisition(self, trial_index):
         """#TODO:_summary_
@@ -196,6 +247,7 @@ class UninformedOptimizer(Optimizer):
     :param Optimizer: _description_
     :type Optimizer: _type_
     """
+
     def __init__(
         self,
         objective,
@@ -218,7 +270,8 @@ class UninformedOptimizer(Optimizer):
         """
         self.initialize_run(experiment_kwargs, num_trials, seed, *args, **kwargs)
         self.search_strategy = self._get_search_strategy()
-        return self._run_loop()
+        self._run_loop()
+        return self.ax_client.get_trials_data_frame()
 
     def _get_search_strategy(self):
         if self.strategy == "grid":
@@ -241,5 +294,3 @@ class UninformedOptimizer(Optimizer):
             self.ax_client.complete_trial(
                 trial_index, self.objective(params | self.obj_func_parameters)
             )
-
-        return self.ax_client.get_trials_data_frame()
