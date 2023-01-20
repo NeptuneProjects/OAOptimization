@@ -36,4 +36,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    Handler(args).run()
+    Handler(pathlib.Path(args.source), pathlib.Path(args.destination)).run()

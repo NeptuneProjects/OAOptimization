@@ -30,10 +30,10 @@ ax_logger = logging.getLogger("ax")
 class Handler:
     """#TODO:_summary_"""
 
-    def __init__(self, args):
-        self.source = pathlib.Path(args.source)
-        self.config = load_config(self.source)
-        self.destination = pathlib.Path(args.destination)
+    def __init__(self, source, destination):
+        self.source = pathlib.Path(source)
+        self.config = load_config(source)
+        self.destination = pathlib.Path(destination)
         self._init_logging()
 
     def _init_logging(self):
