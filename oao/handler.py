@@ -19,7 +19,6 @@ from ax.storage.json_store.save import save_experiment
 sys.path.insert(0, pathlib.Path(__file__).parents[1].resolve().as_posix())
 import oao.common
 from oao.optim.optimizer import logger, BayesianOptimizer, UninformedOptimizer
-from oao.utilities import load_config
 
 root_logger = logging.getLogger(__name__)
 mod_logger = logger
@@ -29,9 +28,8 @@ ax_logger = logging.getLogger("ax")
 class Handler:
     """#TODO:_summary_"""
 
-    def __init__(self, source, destination, objective):
-        self.source = pathlib.Path(source)
-        self.config = load_config(source)
+    def __init__(self, config, destination, objective):
+        self.config = config
         self.destination = pathlib.Path(destination)
         self.objective = objective
         self._init_logging()

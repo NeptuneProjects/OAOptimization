@@ -13,6 +13,7 @@ import sys
 sys.path.insert(0, pathlib.Path(__file__).parents[1].resolve().as_posix())
 from oao.handler import Handler
 from oao.optim.objective import evaluate_branin
+from oao.utilities import load_config
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -26,7 +27,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    config = load_config(args.source)
+
     df = Handler(
-        pathlib.Path(args.source), pathlib.Path(args.destination), evaluate_branin
+        config, pathlib.Path(args.destination), evaluate_branin
     ).run()
     print(df)
