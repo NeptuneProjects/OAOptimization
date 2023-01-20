@@ -155,7 +155,6 @@ class BayesianOptimizer(Optimizer):
             return self._run_greedybatch_loop()
 
     def _run_batch_loop(self):
-
         # Batch optimization loop
         num_warmup = self.ax_client.generation_strategy._steps[0].num_trials
         for _ in range(num_warmup):
@@ -175,7 +174,7 @@ class BayesianOptimizer(Optimizer):
                 if batch_num < num_batches - 1
                 else num_optim - batch_num * self.strategy["batch_size"]
             )
-
+            # TODO: Investigate why GP isn't updating.
             gen_run = self.ax_client._gen_new_generator_run(n=batch_size)
             for arm in gen_run.arms:
                 if optim_num == num_optim:
