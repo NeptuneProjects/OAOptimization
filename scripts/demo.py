@@ -10,19 +10,9 @@ import argparse
 import pathlib
 import sys
 
-from ax.utils.measurement.synthetic_functions import branin
-import numpy as np
-
 sys.path.insert(0, pathlib.Path(__file__).parents[1].resolve().as_posix())
 from oao.handler import Handler
-
-K = None
-
-
-def evaluate(parameters):
-    x = np.array([parameters.get(f"x{i+1}") for i in range(2)])
-    return {"branin": (branin(x), 0.0)}
-
+from oao.optim.objective import evaluate_branin
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -36,4 +26,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    Handler(pathlib.Path(args.source), pathlib.Path(args.destination)).run()
+    df = Handler(
+        pathlib.Path(args.source), pathlib.Path(args.destination), evaluate_branin
+    ).run()
+    print(df)

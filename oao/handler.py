@@ -18,7 +18,6 @@ from ax.storage.json_store.save import save_experiment
 
 sys.path.insert(0, pathlib.Path(__file__).parents[1].resolve().as_posix())
 import oao.common
-from oao.optim.objective import evaluate_branin
 from oao.optim.optimizer import logger, BayesianOptimizer, UninformedOptimizer
 from oao.utilities import load_config
 
@@ -30,10 +29,11 @@ ax_logger = logging.getLogger("ax")
 class Handler:
     """#TODO:_summary_"""
 
-    def __init__(self, source, destination):
+    def __init__(self, source, destination, objective):
         self.source = pathlib.Path(source)
         self.config = load_config(source)
         self.destination = pathlib.Path(destination)
+        self.objective = objective
         self._init_logging()
 
     def _init_logging(self):
@@ -60,7 +60,7 @@ class Handler:
 
         Optimizer = self._get_optimizer()
         opt = Optimizer(
-            evaluate_branin, self.config["strategy"], self.config["obj_func_parameters"]
+            self.objective, self.config["strategy"], self.config["obj_func_parameters"]
         )
         df = opt.run(
             self.config["experiment_kwargs"],
@@ -74,3 +74,4 @@ class Handler:
         root_logger.info(
             f"Experiment saved to {str(self.destination / 'results.json')}"
         )
+        return df
