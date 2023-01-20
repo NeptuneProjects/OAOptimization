@@ -60,7 +60,7 @@ class Handler:
         opt = Optimizer(
             self.objective, self.config["strategy"], self.config["obj_func_parameters"]
         )
-        df = opt.run(
+        opt.run(
             self.config["experiment_kwargs"],
             self.config["num_trials"],
             self.config["evaluation_config"],
@@ -72,4 +72,4 @@ class Handler:
         root_logger.info(
             f"Experiment saved to {str(self.destination / 'results.json')}"
         )
-        return df
+        return opt.ax_client

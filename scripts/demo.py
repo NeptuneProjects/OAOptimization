@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     config = load_config(args.source)
 
-    df = Handler(
+    client = Handler(
         config, pathlib.Path(args.destination), evaluate_branin
     ).run()
-    print(df)
+    print(client)
