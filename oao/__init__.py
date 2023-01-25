@@ -9,7 +9,7 @@
 acoustic parameters in the ocean using uninformed search methods and 
 Bayesian optimization.
 """
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 import logging
 import pathlib
