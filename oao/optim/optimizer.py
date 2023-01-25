@@ -22,6 +22,8 @@ from ax.service.ax_client import AxClient
 import numpy as np
 
 sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
+
+from oao.common import UNINFORMED_STRATEGIES
 from oao.optim import uninformed
 from oao.utilities import get_test_features
 
@@ -62,7 +64,7 @@ class Optimizer:
     def initialize_run(
         self,
         experiment_kwargs,
-        num_trials,
+        # num_trials,
         evaluation_config=None,
         seed=None,
         *args,
@@ -80,13 +82,12 @@ class Optimizer:
         :type seed: _type_, optional
         """
         self.experiment_kwargs = experiment_kwargs
-        self.num_trials = num_trials
         self.seed = seed
-
-        if isinstance(self.strategy, dict):
-            self.generation_strategy = self.strategy["generation_strategy"]
-        else:
+        self.num_trials = self.strategy["num_trials"]
+        if self.strategy["loop_type"] in UNINFORMED_STRATEGIES:
             self.generation_strategy = None
+        else:
+            self.generation_strategy = self.strategy["generation_strategy"]
 
         self.ax_client = AxClient(
             generation_strategy=self.generation_strategy,
@@ -137,9 +138,7 @@ class BayesianOptimizer(Optimizer):
         :return: _description_
         :rtype: _type_
         """
-        self.initialize_run(
-            experiment_kwargs, num_trials, evaluation_config, seed, *args, **kwargs
-        )
+        self.initialize_run(experiment_kwargs, evaluation_config, seed, *args, **kwargs)
         self._run_loop()
         return self.ax_client.get_trials_data_frame()
 
@@ -267,24 +266,28 @@ class UninformedOptimizer(Optimizer):
         :return: _description_
         :rtype: _type_
         """
-        self.initialize_run(experiment_kwargs, num_trials, seed, *args, **kwargs)
+        self.initialize_run(experiment_kwargs, seed, *args, **kwargs)
         self.search_strategy = self._get_search_strategy()
         self._run_loop()
         return self.ax_client.get_trials_data_frame()
 
     def _get_search_strategy(self):
-        if self.strategy == "grid":
+        if self.strategy["loop_type"] == "grid":
             logger.info("Generating samples using grid sampling.")
             return uninformed.get_grid_samples
-        elif self.strategy == "lhs":
+        elif self.strategy["loop_type"] == "lhs":
             logger.info("Generating samples using Latin hypercube sampling.")
             return uninformed.get_latin_hypercube_samples
-        elif self.strategy == "random":
+        elif self.strategy["loop_type"] == "random":
             logger.info("Generating samples using random search.")
             return uninformed.get_random_samples
-        elif self.strategy == "sobol":
+        elif self.strategy["loop_type"] == "sobol":
             logger.info("Generating samples using Sobol sequence sampling.")
             return uninformed.get_sobol_samples
+        else:
+            return ValueError(
+                f"Wrong loop type ({self.strategy['loop_type']}) specified."
+            )
 
     def _run_loop(self):
         df = self.search_strategy(self.bounds, self.num_trials, self.seed)

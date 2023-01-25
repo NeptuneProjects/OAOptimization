@@ -45,7 +45,7 @@ class Handler:
 
     def _get_optimizer(self):
 
-        if self.config["strategy"] in oao.common.UNINFORMED_STRATEGIES:
+        if self.config["strategy"]["loop_type"] in oao.common.UNINFORMED_STRATEGIES:
             root_logger.info("Uninformed search strategy selected.")
             return UninformedOptimizer
         else:
@@ -62,7 +62,8 @@ class Handler:
         )
         opt.run(
             self.config["experiment_kwargs"],
-            self.config["num_trials"],
+            # self.config["num_trials"],
+            self.config["strategy"]["num_trials"],
             self.config["evaluation_config"],
             self.config["seed"],
         )

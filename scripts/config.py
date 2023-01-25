@@ -65,7 +65,10 @@ obj_func_parameters = {
 # 3. SEARCH STRATEGY ===========================================================
 # Uninformed Search Configurations
 # NUM_TRIALS = [3, 3]
-# strategy = "grid"
+# strategy = {
+#     "loop_type": "sobol",
+#     "num_trials": 10
+# }
 
 # Bayesian Search Configurations
 # Sequential optimization
@@ -73,6 +76,7 @@ NUM_WARMUP = 7
 NUM_TRIALS = 20
 strategy = {
     "loop_type": "sequential",
+    "num_trials": NUM_TRIALS,
     "generation_strategy": GenerationStrategy(
         [
             GenerationStep(
@@ -191,7 +195,7 @@ evaluation_config = None
 config = {
     "experiment_kwargs": experiment_kwargs,
     "obj_func_parameters": obj_func_parameters,
-    "num_trials": NUM_TRIALS,
+    # "num_trials": NUM_TRIALS,
     "seed": SEED,
     "strategy": strategy,
     "evaluation_config": evaluation_config,
