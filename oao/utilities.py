@@ -19,6 +19,7 @@ from ax.storage.json_store.decoder import object_from_json
 from ax.storage.json_store.encoder import object_to_json
 import numpy as np
 from sklearn.model_selection import ParameterGrid
+import torch
 
 
 class ConfigEncoder(json.JSONEncoder):
@@ -27,6 +28,7 @@ class ConfigEncoder(json.JSONEncoder):
     :param json: _description_
     :type json: _type_
     """
+
     def default(self, o):
         """#TODO:_summary_
 
@@ -49,6 +51,7 @@ class ConfigDecoder(json.JSONDecoder):
     :param json: _description_
     :type json: _type_
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
@@ -69,30 +72,6 @@ class ConfigDecoder(json.JSONDecoder):
             return object_from_json(obj)
         else:
             return obj
-
-
-def save_config(path: Union[str, PurePath], config: dict):
-    """#TODO:_summary_
-
-    :param path: _description_
-    :type path: Union[str, PurePath]
-    :param config: _description_
-    :type config: dict
-    """
-    with open(path, "w") as fp:
-        json.dump(config, fp, cls=ConfigEncoder, indent=4)
-
-
-def load_config(path: Union[str, PurePath]) -> dict:
-    """#TODO:_summary_
-
-    :param path: _description_
-    :type path: Union[str, PurePath]
-    :return: _description_
-    :rtype: dict
-    """
-    with open(path, "r") as fp:
-        return json.load(fp, cls=ConfigDecoder)
 
 
 def get_grid_parameters(bounds: dict, num_samples: Union[int, list]) -> list:
@@ -140,3 +119,40 @@ def get_test_features(bounds: dict, num_samples: Union[int, list]) -> list:
     """
     grid_parameters = get_grid_parameters(bounds, num_samples)
     return [ObservationFeatures(p) for p in grid_parameters]
+
+
+def load_config(path: Union[str, PurePath]) -> dict:
+    """#TODO:_summary_
+
+    :param path: _description_
+    :type path: Union[str, PurePath]
+    :return: _description_
+    :rtype: dict
+    """
+    with open(path, "r") as fp:
+        return json.load(fp, cls=ConfigDecoder)
+
+
+def save_config(path: Union[str, PurePath], config: dict):
+    """#TODO:_summary_
+
+    :param path: _description_
+    :type path: Union[str, PurePath]
+    :param config: _description_
+    :type config: dict
+    """
+    with open(path, "w") as fp:
+        json.dump(config, fp, cls=ConfigEncoder, indent=4)
+
+
+def set_device(device: str):
+    """#TODO:_summary_
+
+    :param device: _description_
+    :type device: str
+    :return: _description_
+    :rtype: _type_
+    """
+    return torch.device(
+        "cuda" if (torch.cuda.is_available() and device == "cuda") else "cpu"
+    )
