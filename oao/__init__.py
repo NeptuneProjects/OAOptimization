@@ -15,6 +15,27 @@ import logging
 import pathlib
 import sys
 
+
+
+from ax.storage.botorch_modular_registry import ACQUISITION_FUNCTION_REGISTRY
+from ax.storage.botorch_modular_registry import REVERSE_ACQUISITION_FUNCTION_REGISTRY
+from botorch.acquisition import qUpperConfidenceBound, qExpectedImprovement, qProbabilityOfImprovement, ProbabilityOfImprovement
+
+ACQUISITION_FUNCTION_REGISTRY.update(
+    {
+        ProbabilityOfImprovement: "ProbabilityOfImprovement",
+        qProbabilityOfImprovement: "qProbabilityOfImprovement",
+        qUpperConfidenceBound: "qUpperConfidenceBound",
+    }
+)
+REVERSE_ACQUISITION_FUNCTION_REGISTRY.update(
+    {
+        "ProbabilityOfImprovement": ProbabilityOfImprovement,
+        "qProbabilityOfImprovement": qProbabilityOfImprovement,
+        "qUpperConfidenceBound": qUpperConfidenceBound,
+    }
+)
+
 sys.path.insert(0, pathlib.Path(__file__).parents[1].resolve().as_posix())
 import oao.common
 
