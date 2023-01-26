@@ -64,7 +64,6 @@ class Optimizer:
     def initialize_run(
         self,
         experiment_kwargs,
-        # num_trials,
         evaluation_config=None,
         seed=None,
         *args,
@@ -119,7 +118,6 @@ class BayesianOptimizer(Optimizer):
     def run(
         self,
         experiment_kwargs,
-        num_trials,
         evaluation_config=None,
         seed=None,
         *args,
@@ -254,7 +252,7 @@ class UninformedOptimizer(Optimizer):
     ):
         super().__init__(objective, strategy, obj_func_parameters)
 
-    def run(self, experiment_kwargs, num_trials, seed=None, *args, **kwargs):
+    def run(self, experiment_kwargs, seed=None, *args, **kwargs):
         """#TODO:_summary_
 
         :param experiment_kwargs: _description_
