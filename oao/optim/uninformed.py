@@ -17,7 +17,6 @@ from typing import Optional, Union
 import numpy as np
 import pandas as pd
 from scipy.stats import qmc
-from sklearn.model_selection import ParameterGrid
 
 sys.path.insert(0, pathlib.Path(__file__).parents[1].resolve().as_posix())
 from oao.utilities import get_grid_parameters
