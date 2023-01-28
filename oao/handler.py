@@ -65,9 +65,10 @@ class Handler:
             self.config["evaluation_config"],
             self.config["seed"],
         )
-        save_experiment(
-            opt.ax_client.experiment, str(self.destination / "results.json")
-        )
+        opt.ax_client.save_to_json_file(str(self.destination / "results.json"))
+        # save_experiment(
+        #     opt.ax_client.experiment, str(self.destination / "results.json")
+        # )
         root_logger.info(
             f"Experiment saved to {str(self.destination / 'results.json')}"
         )
