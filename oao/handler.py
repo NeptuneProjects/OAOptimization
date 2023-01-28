@@ -62,7 +62,7 @@ class Handler:
         )
         opt.run(
             self.config["experiment_kwargs"],
-            self.config["strategy"]["num_trials"],
+            # self.config["strategy"]["num_trials"],
             self.config["evaluation_config"],
             self.config["seed"],
         )
