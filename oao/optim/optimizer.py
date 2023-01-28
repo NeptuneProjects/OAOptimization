@@ -20,6 +20,7 @@ from typing import Optional, Union
 
 from ax.service.ax_client import AxClient
 import numpy as np
+import torch
 
 sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
 
@@ -65,7 +66,7 @@ class Optimizer:
         self,
         experiment_kwargs,
         evaluation_config=None,
-        seed=None,
+        seed: int=None,
         *args,
         **kwargs,
     ):
@@ -82,6 +83,7 @@ class Optimizer:
         """
         self.experiment_kwargs = experiment_kwargs
         self.seed = seed
+        torch.manual_seed(self.seed)
         self.num_trials = self.strategy["num_trials"]
         if self.strategy["loop_type"] in UNINFORMED_STRATEGIES:
             self.generation_strategy = None
