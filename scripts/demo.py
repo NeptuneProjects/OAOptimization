@@ -29,7 +29,5 @@ if __name__ == "__main__":
 
     config = load_config(args.source)
 
-    client = Handler(
-        config, pathlib.Path(args.destination), evaluate_branin
-    ).run()
-    print(client)
+    client = Handler(config, pathlib.Path(args.destination), evaluate_branin).run()
+    print(client.get_trials_data_frame())
