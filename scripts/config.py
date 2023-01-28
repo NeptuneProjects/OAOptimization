@@ -114,29 +114,30 @@ strategy = {
                 model=Models.SOBOL,
                 num_trials=NUM_WARMUP,
                 max_parallelism=NUM_WARMUP,
-                model_kwargs={"seed": SEED},
+                # model_kwargs={"seed": SEED},
             ),
-            GenerationStep(
-                model=Models.BOTORCH_MODULAR,
-                num_trials=NUM_TRIALS - NUM_WARMUP,
-                max_parallelism=5,
-                model_kwargs={
-                    "surrogate": Surrogate(
-                        botorch_model_class=SingleTaskGP,
-                        mll_class=ExactMarginalLogLikelihood
-                    ),
-                    "botorch_acqf_class": qProbabilityOfImprovement, # qProbabilityOfImprovement | qExpectedImprovement
-                    "torch_device": DEVICE
-                },
-                model_gen_kwargs={
-                    "model_gen_options": {
-                        "optimizer_kwargs": {
-                            "num_restarts": N_RESTARTS,
-                            "raw_samples": N_SAMPLES
-                        }
-                    }
-                }
-            ),
+            # GenerationStep(
+            #     model=Models.BOTORCH_MODULAR,
+            #     num_trials=NUM_TRIALS - NUM_WARMUP,
+            #     max_parallelism=5,
+            #     model_kwargs={
+            #         "surrogate": Surrogate(
+            #             botorch_model_class=SingleTaskGP,
+            #             mll_class=ExactMarginalLogLikelihood
+            #         ),
+            #         "botorch_acqf_class": qProbabilityOfImprovement, # qProbabilityOfImprovement | qExpectedImprovement
+            #         "torch_device": DEVICE,
+            #     },
+            #     model_gen_kwargs={
+            #         "model_gen_options": {
+            #             "optimizer_kwargs": {
+            #                 "num_restarts": N_RESTARTS,
+            #                 "raw_samples": N_SAMPLES,
+            #                 # "seed": SEED
+            #             }
+            #         }
+            #     }
+            # ),
         ]
     ),
 }
@@ -205,3 +206,13 @@ config = {
 
 if __name__ == "__main__":
     save_config("scripts/config.json", config)
+
+
+# test = config["strategy"]["generation_strategy"]._steps[1].model_kwargs["seed"]
+# print(test)
+
+# for step in config["strategy"]["generation_strategy"]._steps:
+#     step.model_kwargs["seed"] = 1234
+
+# test = config["strategy"]["generation_strategy"]._steps[1].model_kwargs["seed"]
+# print(test)
