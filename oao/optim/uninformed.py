@@ -13,6 +13,7 @@ random search, and quasi-random search.
 import pathlib
 import sys
 from typing import Optional, Union
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -111,7 +112,9 @@ def get_sobol_samples(
     :rtype: pd.DataFrame
     """
     sampler = qmc.Sobol(len(bounds), seed=seed)
-    samples = sampler.random(num_samples)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning)
+        samples = sampler.random(num_samples)
     l_bounds = [bound[0] for bound in bounds.values()]
     u_bounds = [bound[1] for bound in bounds.values()]
     samples = qmc.scale(samples, l_bounds, u_bounds)
