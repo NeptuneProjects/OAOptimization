@@ -17,6 +17,7 @@ import logging
 import pathlib
 import sys
 from typing import Optional, Union
+import warnings
 
 from ax.service.ax_client import AxClient
 import numpy as np
@@ -138,8 +139,10 @@ class BayesianOptimizer(Optimizer):
         :return: _description_
         :rtype: _type_
         """
-        self.initialize_run(experiment_kwargs, evaluation_config, seed, *args, **kwargs)
-        self._run_loop()
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=FutureWarning)
+            self.initialize_run(experiment_kwargs, evaluation_config, seed, *args, **kwargs)
+            self._run_loop()
         return self.ax_client.get_trials_data_frame()
 
     def _run_loop(self):
