@@ -13,7 +13,7 @@ from ax.modelbridge.generation_strategy import GenerationStep, GenerationStrateg
 from ax.modelbridge.registry import Models
 from ax.models.torch.botorch_modular.surrogate import Surrogate
 from ax.service.ax_client import ObjectiveProperties
-from botorch.acquisition.monte_carlo import qExpectedImprovement, qProbabilityOfImprovement
+from botorch.acquisition import qExpectedImprovement, qProbabilityOfImprovement
 from botorch.models.gp_regression import SingleTaskGP
 from gpytorch.mlls.exact_marginal_log_likelihood import ExactMarginalLogLikelihood
 import torch
@@ -72,75 +72,94 @@ obj_func_parameters = {
 
 # Bayesian Search Configurations
 # Sequential optimization
-# NUM_WARMUP = 7
-# NUM_TRIALS = 20
-# strategy = {
-#     "loop_type": "sequential",
-#     "num_trials": NUM_TRIALS,
-#     "generation_strategy": GenerationStrategy(
-#         [
-#             GenerationStep(
-#                 model=Models.SOBOL,
-#                 num_trials=NUM_WARMUP,
-#                 max_parallelism=NUM_WARMUP,
-#                 model_kwargs={"seed": SEED},
-#             ),
-#             GenerationStep(
-#                 model=Models.GPEI,
-#                 num_trials=-1,
-#                 max_parallelism=None,
-#                 model_kwargs={"torch_device": DEVICE},
-#                 model_gen_kwargs={
-#                     "model_gen_options": {
-#                         "num_restarts": N_RESTARTS,
-#                         "raw_samples": N_SAMPLES
-#                     }
-#                 }
-#             ),
-#         ]
-#     )
-# }
-
-# Sequential greedy batch optimization
-NUM_WARMUP = 7
-NUM_TRIALS = 20
+NUM_WARMUP = 10
+NUM_TRIALS = 50
 strategy = {
-    "loop_type": "greedy_batch", # <--- This is where to specify loop
+    "loop_type": "sequential",
     "num_trials": NUM_TRIALS,
-    "batch_size": 5,
     "generation_strategy": GenerationStrategy(
         [
             GenerationStep(
                 model=Models.SOBOL,
                 num_trials=NUM_WARMUP,
                 max_parallelism=NUM_WARMUP,
-                # model_kwargs={"seed": SEED},
+                model_kwargs={"seed": SEED},
             ),
+            GenerationStep(
+                model=Models.BOTORCH_MODULAR,
+                num_trials=NUM_TRIALS - NUM_WARMUP,
+                max_parallelism=None,
+                model_kwargs={
+                    "surrogate": Surrogate(
+                        botorch_model_class=SingleTaskGP,
+                        mll_class=ExactMarginalLogLikelihood,
+                    ),
+                    "botorch_acqf_class": qExpectedImprovement,
+                },
+                model_gen_kwargs={
+                    "model_gen_options": {
+                        "optimizer_kwargs": {
+                            "num_restarts": N_RESTARTS,
+                            "raw_samples": N_SAMPLES,
+                        }
+                    }
+                },
+            )
             # GenerationStep(
-            #     model=Models.BOTORCH_MODULAR,
-            #     num_trials=NUM_TRIALS - NUM_WARMUP,
-            #     max_parallelism=5,
-            #     model_kwargs={
-            #         "surrogate": Surrogate(
-            #             botorch_model_class=SingleTaskGP,
-            #             mll_class=ExactMarginalLogLikelihood
-            #         ),
-            #         "botorch_acqf_class": qProbabilityOfImprovement, # qProbabilityOfImprovement | qExpectedImprovement
-            #         "torch_device": DEVICE,
-            #     },
+            #     model=Models.GPEI,
+            #     num_trials=-1,
+            #     max_parallelism=None,
+            #     model_kwargs={"torch_device": DEVICE},
             #     model_gen_kwargs={
             #         "model_gen_options": {
-            #             "optimizer_kwargs": {
-            #                 "num_restarts": N_RESTARTS,
-            #                 "raw_samples": N_SAMPLES,
-            #                 # "seed": SEED
-            #             }
+            #             "num_restarts": N_RESTARTS,
+            #             "raw_samples": N_SAMPLES
             #         }
             #     }
             # ),
         ]
-    ),
+    )
 }
+
+# Sequential greedy batch optimization
+# NUM_WARMUP = 7
+# NUM_TRIALS = 20
+# strategy = {
+#     "loop_type": "greedy_batch", # <--- This is where to specify loop
+#     "num_trials": NUM_TRIALS,
+#     "batch_size": 5,
+#     "generation_strategy": GenerationStrategy(
+#         [
+#             GenerationStep(
+#                 model=Models.SOBOL,
+#                 num_trials=NUM_WARMUP,
+#                 max_parallelism=NUM_WARMUP,
+#                 # model_kwargs={"seed": SEED},
+#             ),
+#             GenerationStep(
+#                 model=Models.BOTORCH_MODULAR,
+#                 num_trials=NUM_TRIALS - NUM_WARMUP,
+#                 max_parallelism=5,
+#                 model_kwargs={
+#                     "surrogate": Surrogate(
+#                         botorch_model_class=SingleTaskGP,
+#                         mll_class=ExactMarginalLogLikelihood
+#                     ),
+#                     "botorch_acqf_class": qExpectedImprovement, # qProbabilityOfImprovement | qExpectedImprovement
+#                     "torch_device": DEVICE,
+#                 },
+#                 model_gen_kwargs={
+#                     "model_gen_options": {
+#                         "optimizer_kwargs": {
+#                             "num_restarts": N_RESTARTS,
+#                             "raw_samples": N_SAMPLES,
+#                         }
+#                     }
+#                 }
+#             ),
+#         ]
+#     ),
+# }
 
 # Batch optimization
 # NUM_WARMUP = 7
@@ -192,8 +211,8 @@ experiment_kwargs = {
 }
 
 # Dictionary for controlling evaluation of GP and Acq Function during training
-# evaluation_config = {"num_samples": 3}
-evaluation_config = None
+evaluation_config = {"num_test_points": 100}
+# evaluation_config = None
 
 config = {
     "experiment_kwargs": experiment_kwargs,

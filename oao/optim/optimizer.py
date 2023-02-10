@@ -21,6 +21,7 @@ import warnings
 
 from ax.service.ax_client import AxClient
 import numpy as np
+import pandas as pd
 import torch
 
 sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
@@ -67,7 +68,7 @@ class Optimizer:
         self,
         experiment_kwargs,
         evaluation_config=None,
-        seed: int=None,
+        seed: int = None,
         *args,
         **kwargs,
     ):
@@ -141,14 +142,16 @@ class BayesianOptimizer(Optimizer):
         """
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=FutureWarning)
-            self.initialize_run(experiment_kwargs, evaluation_config, seed, *args, **kwargs)
+            self.initialize_run(
+                experiment_kwargs, evaluation_config, seed, *args, **kwargs
+            )
             self._run_loop()
         return self.ax_client.get_trials_data_frame()
 
     def _run_loop(self):
         if self.evaluation_config is not None:
-            self.test_features = get_test_features(self.bounds, 10)
-
+            self.evalflag = True
+            self.configure_model_evaluation()
         if self.strategy["loop_type"] == "sequential":
             return self._run_sequential_loop()
         elif self.strategy["loop_type"] == "batch":
@@ -218,28 +221,71 @@ class BayesianOptimizer(Optimizer):
             ]
 
     def _run_sequential_loop(self):
+        if self.evalflag:
+            y_test = []
+            cov_test = []
+            alpha_test = []
+
         for _ in range(self.num_trials):
             params, trial_index = self.ax_client.get_next_trial()
             results = self.objective(params | self.obj_func_parameters)
             self.ax_client.complete_trial(trial_index, results)
 
             # Evaluate acquisition function and GP model
-            if (self.ax_client.generation_strategy.current_step.index != 1) and (
+            if (self.ax_client.generation_strategy.current_step.index > 0) and (
                 self.evaluation_config is not None
             ):
-                df = self.evaluate_model_and_acquisition(trial_index)
+                y_tmp, cov_tmp, alpha_tmp = self.evaluate_model_and_acquisition()
+                y_test.append(np.array(list(y_tmp.values())).squeeze())
+                cov_test.append(
+                    np.array(list((list(cov_tmp.values())[0]).values())).squeeze()
+                )
+                alpha_test.append(alpha_tmp)
 
-    def evaluate_model_and_acquisition(self, trial_index):
+        if self.evalflag:
+            y_test = np.array(y_test)
+            cov_test = np.array(cov_test)
+            alpha_test = np.array(alpha_test)
+            np.save(self.evaluation_config["path"] / "y_test.npy", y_test)
+            np.save(self.evaluation_config["path"] / "cov_test.npy", cov_test)
+            np.save(self.evaluation_config["path"] / "alpha_test.npy", alpha_test)
+
+    def evaluate_model_and_acquisition(self):
         """#TODO:_summary_
 
         :param trial_index: _description_
         :type trial_index: _type_
         """
         model = self.ax_client.generation_strategy.model
-        y_test = model.predict(self.test_features)
-        alpha = model.evaluate_acquisition_function(self.test_features)
-        # TODO: tabularize eval results by trial index
-        return
+        y_test, cov_test = model.predict(self.X_test)
+        alpha_test = model.evaluate_acquisition_function(self.X_test)
+        return y_test, cov_test, alpha_test
+
+    def configure_model_evaluation(self):
+        X_test = get_test_features(
+            self.bounds, self.evaluation_config["num_test_points"]
+        )
+        self.X_test = X_test
+        y_actual = np.array(
+            [
+                list(
+                    self.objective(
+                        self.obj_func_parameters | test_point.parameters
+                    ).values()
+                )[0][0]
+                for test_point in X_test
+            ]
+        )
+        X_array = np.array(
+            [
+                col
+                for _, col in pd.DataFrame(
+                    [test_point.parameters for test_point in X_test]
+                ).iteritems()
+            ]
+        )
+        np.save(self.evaluation_config["path"] / "X.npy", X_array)
+        np.save(self.evaluation_config["path"] / "y.npy", y_actual)
 
 
 class UninformedOptimizer(Optimizer):

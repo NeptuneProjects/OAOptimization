@@ -60,6 +60,8 @@ class Handler:
         opt = Optimizer(
             self.objective, self.config["strategy"], self.config["obj_func_parameters"]
         )
+        if self.config["evaluation_config"] is not None:
+            self.config["evaluation_config"].update({"path": self.destination})
         opt.run(
             self.config["experiment_kwargs"],
             self.config["evaluation_config"],
