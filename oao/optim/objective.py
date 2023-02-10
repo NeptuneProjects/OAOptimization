@@ -24,7 +24,7 @@ def evaluate_branin(parameters: dict) -> dict:
     :rtype: dict
     """
     x = np.array([parameters.get(f"x{i+1}") for i in range(2)])
-    return {"branin": (synth.branin(x), 0.0)}
+    return {"branin": (synth.branin(x), None)}
 
 
 def evaluate_hartmann6(parameters: dict) -> dict:
@@ -36,7 +36,7 @@ def evaluate_hartmann6(parameters: dict) -> dict:
     :rtype: dict
     """
     x = np.array([parameters.get(f"x{i+1}") for i in range(6)])
-    return {"hartmann6": (synth.hartmann6(x), 0.0)}
+    return {"hartmann6": (synth.hartmann6(x), None)}
 
 
 # def evaluate_kraken(parameters: dict) -> dict:
