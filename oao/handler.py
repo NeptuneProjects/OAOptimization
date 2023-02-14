@@ -20,9 +20,11 @@ sys.path.insert(0, pathlib.Path(__file__).parents[1].resolve().as_posix())
 import oao.common
 from oao.optim.optimizer import logger, BayesianOptimizer, UninformedOptimizer
 
+logging.captureWarnings(True)
 root_logger = logging.getLogger(__name__)
 mod_logger = logger
 ax_logger = logging.getLogger("ax")
+warnings_logger = logging.getLogger("py.warnings")
 
 
 class Handler:
@@ -42,6 +44,7 @@ class Handler:
         root_logger.addHandler(fh)
         mod_logger.addHandler(fh)
         ax_logger.addHandler(fh)
+        warnings_logger.addHandler(fh)
 
     def _get_optimizer(self):
 
@@ -55,23 +58,25 @@ class Handler:
     def run(self):
         """#TODO:_summary_"""
         root_logger.info("Starting optimization.")
-
-        Optimizer = self._get_optimizer()
-        opt = Optimizer(
-            self.objective, self.config["strategy"], self.config["obj_func_parameters"]
-        )
-        if self.config["evaluation_config"] is not None:
-            self.config["evaluation_config"].update({"path": self.destination})
-        opt.run(
-            self.config["experiment_kwargs"],
-            self.config["evaluation_config"],
-            self.config["seed"],
-        )
-        opt.ax_client.save_to_json_file(str(self.destination / "results.json"))
-        # save_experiment(
-        #     opt.ax_client.experiment, str(self.destination / "results.json")
-        # )
-        root_logger.info(
-            f"Experiment saved to {str(self.destination / 'results.json')}"
-        )
-        return opt.ax_client
+        try:
+            Optimizer = self._get_optimizer()
+            opt = Optimizer(
+                self.objective, self.config["strategy"], self.config["obj_func_parameters"]
+            )
+            if self.config["evaluation_config"] is not None:
+                self.config["evaluation_config"].update({"path": self.destination})
+            opt.run(
+                self.config["experiment_kwargs"],
+                self.config["evaluation_config"],
+                self.config["seed"],
+            )
+            opt.ax_client.save_to_json_file(str(self.destination / "results.json"))
+            # save_experiment(
+            #     opt.ax_client.experiment, str(self.destination / "results.json")
+            # )
+            root_logger.info(
+                f"Best trial: {opt.ax_client.get_best_trial()}"
+            )
+            return opt.ax_client
+        except:
+            root_logger.exception("Error Message")
