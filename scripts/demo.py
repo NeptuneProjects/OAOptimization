@@ -29,5 +29,10 @@ if __name__ == "__main__":
 
     config = load_config(args.source)
 
-    client = Handler(config, pathlib.Path(args.destination), evaluate_griewank).run()
-    print(client.get_trials_data_frame())
+    try:
+        client = Handler(
+            config, pathlib.Path(args.destination), evaluate_griewank
+        ).run()
+        print(client.get_trials_data_frame())
+    except:
+        print("There was no error and I'm moving stuff now!")

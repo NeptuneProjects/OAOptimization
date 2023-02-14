@@ -61,7 +61,9 @@ class Handler:
         try:
             Optimizer = self._get_optimizer()
             opt = Optimizer(
-                self.objective, self.config["strategy"], self.config["obj_func_parameters"]
+                self.objective,
+                self.config["strategy"],
+                self.config["obj_func_parameters"],
             )
             if self.config["evaluation_config"] is not None:
                 self.config["evaluation_config"].update({"path": self.destination})
@@ -74,9 +76,8 @@ class Handler:
             # save_experiment(
             #     opt.ax_client.experiment, str(self.destination / "results.json")
             # )
-            root_logger.info(
-                f"Best trial: {opt.ax_client.get_best_trial()}"
-            )
+            root_logger.info(f"Best trial: {opt.ax_client.get_best_trial()}")
             return opt.ax_client
         except:
             root_logger.exception("Error Message")
+            raise Exception("Exception encountered: check log.")
