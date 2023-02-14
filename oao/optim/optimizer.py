@@ -13,6 +13,7 @@ and `UninformedOptimization`, which contains a loop for implementing
 various types of non-Bayesian search.
 """
 
+from copy import deepcopy
 import logging
 import pathlib
 import sys
@@ -20,6 +21,7 @@ from typing import Optional, Union
 import warnings
 
 from ax.service.ax_client import AxClient
+from botorch.acquisition import ExpectedImprovement
 import numpy as np
 import pandas as pd
 import torch
@@ -256,9 +258,10 @@ class BayesianOptimizer(Optimizer):
         :param trial_index: _description_
         :type trial_index: _type_
         """
-        model = self.ax_client.generation_strategy.model
+        model = deepcopy(self.ax_client.generation_strategy.model)
         y_test, cov_test = model.predict(self.X_test)
         alpha_test = model.evaluate_acquisition_function(self.X_test)
+        # TODO: Implement acquisition function manually
         return y_test, cov_test, alpha_test
 
     def configure_model_evaluation(self):
