@@ -141,3 +141,4 @@ docs
 requirements.txt
 *.ipynb
 scripts/figures
+*.npy
