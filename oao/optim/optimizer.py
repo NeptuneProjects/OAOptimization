@@ -113,6 +113,8 @@ class BayesianOptimizer(Optimizer):
     :type Optimizer: _type_
     """
 
+    evalflag = False
+
     def __init__(
         self,
         objective,
