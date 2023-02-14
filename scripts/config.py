@@ -72,8 +72,8 @@ obj_func_parameters = {
 
 # Bayesian Search Configurations
 # Sequential optimization
-NUM_WARMUP = 50
-NUM_TRIALS = 200
+NUM_WARMUP = 5
+NUM_TRIALS = 20
 strategy = {
     "loop_type": "sequential",
     "num_trials": NUM_TRIALS,
@@ -106,18 +106,6 @@ strategy = {
                 },
                 should_deduplicate=False,
             )
-            # GenerationStep(
-            #     model=Models.GPEI,
-            #     num_trials=-1,
-            #     max_parallelism=None,
-            #     model_kwargs={"torch_device": DEVICE},
-            #     model_gen_kwargs={
-            #         "model_gen_options": {
-            #             "num_restarts": N_RESTARTS,
-            #             "raw_samples": N_SAMPLES
-            #         }
-            #     }
-            # ),
         ]
     )
 }
@@ -212,8 +200,8 @@ experiment_kwargs = {
 }
 
 # Dictionary for controlling evaluation of GP and Acq Function during training
-evaluation_config = {"num_test_points": 100}
-# evaluation_config = None
+# evaluation_config = {"num_test_points": 100}
+evaluation_config = None
 
 config = {
     "experiment_kwargs": experiment_kwargs,
