@@ -12,7 +12,7 @@ import sys
 
 sys.path.insert(0, pathlib.Path(__file__).parents[1].resolve().as_posix())
 from oao.handler import Handler
-from oao.optim.objective import evaluate_branin
+from oao.optim.objective import evaluate_branin, evaluate_griewank
 from oao.utilities import load_config
 
 if __name__ == "__main__":
@@ -29,5 +29,5 @@ if __name__ == "__main__":
 
     config = load_config(args.source)
 
-    client = Handler(config, pathlib.Path(args.destination), evaluate_branin).run()
+    client = Handler(config, pathlib.Path(args.destination), evaluate_griewank).run()
     print(client.get_trials_data_frame())

@@ -13,8 +13,8 @@ from ax.modelbridge.generation_strategy import GenerationStep, GenerationStrateg
 from ax.modelbridge.registry import Models
 from ax.models.torch.botorch_modular.surrogate import Surrogate
 from ax.service.ax_client import ObjectiveProperties
-from botorch.acquisition import qExpectedImprovement, qProbabilityOfImprovement
-from botorch.models.gp_regression import SingleTaskGP
+from botorch.acquisition import qExpectedImprovement, qProbabilityOfImprovement, qNoisyExpectedImprovement
+from botorch.models.gp_regression import FixedNoiseGP, SingleTaskGP
 from gpytorch.mlls.exact_marginal_log_likelihood import ExactMarginalLogLikelihood
 import torch
 
@@ -28,8 +28,8 @@ from oao.utilities import save_config
 
 # LOW-LEVEL CONFIGS ===========================================================
 SEED = 2009
-N_RESTARTS = 20
-N_SAMPLES = 512
+N_RESTARTS = 40
+N_SAMPLES = 1024
 DEVICE = torch.device(
     "cuda"
     if torch.cuda.is_available()
@@ -44,16 +44,16 @@ parameters = [
     {
         "name": "x1",
         "type": "range",
-        "bounds": [-5.0, 10.0],
+        "bounds": [-20.0, 20.0],
         "value_type": "float",
         "log_scale": False,
     },
-    {
-        "name": "x2",
-        "type": "range",
-        "bounds": [0.0, 15.0],
-        "value_type": "float",
-    },
+    # {
+    #     "name": "x2",
+    #     "type": "range",
+    #     "bounds": [0.0, 15.0],
+    #     "value_type": "float",
+    # },
 ]
 
 # 2. OBJECTIVE FUNCTION ========================================================
@@ -72,8 +72,8 @@ obj_func_parameters = {
 
 # Bayesian Search Configurations
 # Sequential optimization
-NUM_WARMUP = 10
-NUM_TRIALS = 50
+NUM_WARMUP = 50
+NUM_TRIALS = 200
 strategy = {
     "loop_type": "sequential",
     "num_trials": NUM_TRIALS,
@@ -91,7 +91,7 @@ strategy = {
                 max_parallelism=None,
                 model_kwargs={
                     "surrogate": Surrogate(
-                        botorch_model_class=SingleTaskGP,
+                        botorch_model_class=FixedNoiseGP,
                         mll_class=ExactMarginalLogLikelihood,
                     ),
                     "botorch_acqf_class": qExpectedImprovement,
@@ -104,6 +104,7 @@ strategy = {
                         }
                     }
                 },
+                should_deduplicate=False,
             )
             # GenerationStep(
             #     model=Models.GPEI,
@@ -203,11 +204,11 @@ strategy = {
 
 
 # HIGH-LEVEL CONFIGS ===========================================================
-experiment_name = "branin_test_experiment"
+experiment_name = "griewank_test_experiment"
 experiment_kwargs = {
     "name": experiment_name,
     "parameters": parameters,
-    "objectives": {"branin": ObjectiveProperties(minimize=True)},
+    "objectives": {"griewank": ObjectiveProperties(minimize=True)},
 }
 
 # Dictionary for controlling evaluation of GP and Acq Function during training

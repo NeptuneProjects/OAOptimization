@@ -9,6 +9,7 @@
 """Module contains objective functions for testing optimization."""
 
 from ax.utils.measurement import synthetic_functions as synth
+from botorch.test_functions.synthetic import Griewank
 import numpy as np
 
 # from tritonoa.kraken import run_kraken
@@ -24,7 +25,7 @@ def evaluate_branin(parameters: dict) -> dict:
     :rtype: dict
     """
     x = np.array([parameters.get(f"x{i+1}") for i in range(2)])
-    return {"branin": (synth.branin(x), None)}
+    return {"branin": (synth.branin(x), 0.0)}
 
 
 def evaluate_hartmann6(parameters: dict) -> dict:
@@ -36,7 +37,13 @@ def evaluate_hartmann6(parameters: dict) -> dict:
     :rtype: dict
     """
     x = np.array([parameters.get(f"x{i+1}") for i in range(6)])
-    return {"hartmann6": (synth.hartmann6(x), None)}
+    return {"hartmann6": (synth.hartmann6(x), 0.0)}
+
+
+def evaluate_griewank(parameters: dict) -> dict:
+    x = np.array(parameters.get("x1"))[..., None]
+    griewank = synth.from_botorch(Griewank(dim=1))
+    return {"griewank": (griewank(x), 0.0)}
 
 
 # def evaluate_kraken(parameters: dict) -> dict:
