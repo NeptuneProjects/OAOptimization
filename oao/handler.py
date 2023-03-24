@@ -14,8 +14,6 @@ import logging
 import pathlib
 import sys
 
-from ax.storage.json_store.save import save_experiment
-
 sys.path.insert(0, pathlib.Path(__file__).parents[1].resolve().as_posix())
 import oao.common
 from oao.optim.optimizer import logger, BayesianOptimizer, UninformedOptimizer
@@ -73,9 +71,6 @@ class Handler:
                 self.config["seed"],
             )
             opt.ax_client.save_to_json_file(str(self.destination / "results.json"))
-            # save_experiment(
-            #     opt.ax_client.experiment, str(self.destination / "results.json")
-            # )
             root_logger.info(f"Best trial: {opt.ax_client.get_best_trial()}")
             return opt.ax_client
         except:

@@ -21,7 +21,6 @@ from typing import Optional, Union
 import warnings
 
 from ax.service.ax_client import AxClient
-from botorch.acquisition import ExpectedImprovement
 import numpy as np
 import pandas as pd
 import torch

@@ -200,8 +200,8 @@ experiment_kwargs = {
 }
 
 # Dictionary for controlling evaluation of GP and Acq Function during training
-# evaluation_config = {"num_test_points": 100}
-evaluation_config = None
+evaluation_config = {"num_test_points": 100}
+# evaluation_config = None
 
 config = {
     "experiment_kwargs": experiment_kwargs,
