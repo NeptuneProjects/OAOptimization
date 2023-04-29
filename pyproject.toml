@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oao"
+description = "Optimization library for ocean acoustics."
+authors = [{ name="William Jenkins", email="wjenkins@ucsd.edu" }]
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.10"
+dependencies = ["ax-platform"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+]
+dynamic = ["version"]
+
+[project.urls]
+"Homepage" = "https://github.com/NeptuneProjects/OAOptimization"
+
+[tool.setuptools.packages.find]
+where = ["oao"]
+
+[tool.setuptools.dynamic]
+version = {attr = "oao.__version__"}
