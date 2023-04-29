@@ -6,7 +6,7 @@ from setuptools import find_packages, setup
 import oao
 
 setup(
-    name="OAOptimization",
+    name="oao",
     version=oao.__version__,
     description="Optimization library for ocean acoustics.",
     package_dir={"": "oao"},
