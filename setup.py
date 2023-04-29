@@ -3,11 +3,9 @@
 
 from setuptools import find_packages, setup
 
-import oao
-
 setup(
     name="oao",
-    version=oao.__version__,
+    version="0.1.0",
     description="Optimization library for ocean acoustics.",
     package_dir={"": "oao"},
     packages=find_packages(where="oao"),
