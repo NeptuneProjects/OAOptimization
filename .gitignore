@@ -142,3 +142,4 @@ requirements.txt
 *.ipynb
 scripts/figures
 *.npy
+oao_v0/
