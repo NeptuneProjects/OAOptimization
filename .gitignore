@@ -143,3 +143,4 @@ requirements.txt
 scripts/figures
 *.npy
 oao_v0/
+tests/
