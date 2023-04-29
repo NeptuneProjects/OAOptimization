@@ -9,7 +9,6 @@ from ax.modelbridge.generation_strategy import GenerationStep, GenerationStrateg
 
 @dataclass
 class GenerationStepConfig:
-
     def construct(self) -> GenerationStep:
         raise NotImplementedError
 
