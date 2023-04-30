@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "oao"
 description = "Optimization library for ocean acoustics."
 authors = [{ name="William Jenkins", email="wjenkins@ucsd.edu" }]
+version = "0.1.0"
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.10"
@@ -15,7 +16,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Operating System :: OS Independent",
 ]
-dynamic = ["version"]
+# dynamic = ["version"]
 
 [project.urls]
 "Homepage" = "https://github.com/NeptuneProjects/OAOptimization"
@@ -23,5 +24,5 @@ dynamic = ["version"]
 [tool.setuptools.packages.find]
 where = ["oao"]
 
-[tool.setuptools.dynamic]
-version = {attr = "oao.__version__"}
+# [tool.setuptools.dynamic]
+# version = {attr = "oao.__version__"}
