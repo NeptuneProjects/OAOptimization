@@ -22,7 +22,7 @@ classifiers = [
 "Homepage" = "https://github.com/NeptuneProjects/OAOptimization"
 
 [tool.setuptools.packages.find]
-where = ["oao"]
+include = ["oao"]
 
 # [tool.setuptools.dynamic]
 # version = {attr = "oao.__version__"}
