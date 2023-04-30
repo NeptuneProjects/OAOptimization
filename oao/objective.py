@@ -16,29 +16,45 @@ class Objective(Protocol):
 
 class NoiselessFormattedObjective:
     def __init__(
-        self, objective: Objective, name: str, properties_kw: dict = {"minimize": True}
+        self,
+        objective: Objective,
+        name: str,
+        properties_kw: dict = {"minimize": True},
+        return_type: type = float,
     ):
         self.objective = objective
         self.name = name
         self.properties = ObjectiveProperties(**properties_kw)
+        self.return_type = return_type
 
     def __call__(self, parameters: dict) -> dict:
         return self.evaluate(parameters)
 
     def evaluate(self, parameters: dict) -> dict:
-        return {self.name: (self.objective.evaluate(parameters), None)}
+        return {
+            self.name: (self.return_type(self.objective.evaluate(parameters)), None)
+        }
 
 
 class NoisyFormattedObjective:
     def __init__(
-        self, objective: Objective, name: str, properties_kw: dict = {"minimize": True}
+        self,
+        objective: Objective,
+        name: str,
+        properties_kw: dict = {"minimize": True},
+        return_type: type = float,
     ):
         self.objective = objective
         self.name = name
         self.properties = ObjectiveProperties(**properties_kw)
+        self.return_type = return_type
 
     def __call__(self, parameters: dict) -> dict:
         return self.evaluate(parameters)
 
     def evaluate(self, parameters: dict) -> dict:
-        return {self.objective_name: self.objective.evaluate(parameters)}
+        return {
+            self.objective_name: tuple(
+                self.return_type(item) for item in self.objective.evaluate(parameters)
+            )
+        }
