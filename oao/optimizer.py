@@ -172,7 +172,7 @@ class GridSearch(Strategy):
         self,
         objective: Objective,
         search_space: SearchSpace,
-        num_trials: Union[int, list[int]],
+        strategy: Union[int, list[int]],
         monitor: Optional[callable] = None,
     ) -> None:
         """
@@ -192,7 +192,7 @@ class GridSearch(Strategy):
         """
         self.objective = objective
         self.search_space = search_space
-        self.num_trials = num_trials
+        self.num_trials = strategy # <- This is for compatability with hydra-zen
         self.monitor = monitor
         self.client = AxClient()
 
