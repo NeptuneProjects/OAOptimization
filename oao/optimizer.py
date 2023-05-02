@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# TODO: Format dataframes for logging, including merging batch execution times.
+# TODO: Append best observed values and parameters to experiment dataframe.
+
 from abc import ABC, abstractmethod
 import time
 from typing import Optional, Union
@@ -14,7 +17,7 @@ from oao.objective import Objective
 from oao.space import SearchSpace, get_parameterized_grid
 
 
-class Strategy(ABC):
+class OptimizationStrategy(ABC):
     """Base class for optimization strategies."""
 
     @abstractmethod
@@ -28,7 +31,7 @@ class Strategy(ABC):
         pass
 
 
-class BayesianOptimization(Strategy):
+class BayesianOptimization(OptimizationStrategy):
     def __init__(
         self,
         objective: Objective,
@@ -167,7 +170,7 @@ class BayesianOptimization(Strategy):
         [self._run_loop(step) for step in self.strategy._steps]
 
 
-class GridSearch(Strategy):
+class GridSearch(OptimizationStrategy):
     def __init__(
         self,
         objective: Objective,
