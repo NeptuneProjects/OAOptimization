@@ -192,7 +192,7 @@ class GridSearch(Strategy):
         """
         self.objective = objective
         self.search_space = search_space
-        self.num_trials = strategy # <- This is for compatability with hydra-zen
+        self.num_trials = strategy  # <- This is for compatability with hydra-zen
         self.monitor = monitor
         self.client = AxClient()
 
