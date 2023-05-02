@@ -17,7 +17,7 @@ from oao.objective import Objective
 from oao.space import SearchSpace, get_parameterized_grid
 
 
-class OptimizationStrategy(ABC):
+class Optimizer(ABC):
     """Base class for optimization strategies."""
 
     @abstractmethod
@@ -31,7 +31,7 @@ class OptimizationStrategy(ABC):
         pass
 
 
-class BayesianOptimization(OptimizationStrategy):
+class BayesianOptimization(Optimizer):
     def __init__(
         self,
         objective: Objective,
@@ -170,7 +170,7 @@ class BayesianOptimization(OptimizationStrategy):
         [self._run_loop(step) for step in self.strategy._steps]
 
 
-class GridSearch(OptimizationStrategy):
+class GridSearch(Optimizer):
     def __init__(
         self,
         objective: Objective,
