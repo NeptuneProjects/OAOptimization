@@ -18,6 +18,16 @@ class SearchParameter:
 
 
 @dataclass
+class SearchParameterBounds:
+    name: str
+    lower_bound: float
+    upper_bound: float
+    relative: bool
+    min_lower_bound: float = 0.0
+    max_upper_bound: float = 0.0
+
+
+@dataclass
 class SearchSpace:
     parameters: list[SearchParameter]
 
@@ -34,6 +44,14 @@ class SearchSpace:
         :rtype: list[dict]
         """
         return [p.__dict__ for p in self.parameters]
+
+
+@dataclass
+class SearchSpaceBounds:
+    bounds: list[SearchParameterBounds]
+
+    def __getitem__(self, index):
+        return self.bounds[index]
 
 
 def get_parameter_grid_array(
