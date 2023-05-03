@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# TODO: Format dataframes for logging, including merging batch execution times.
-# TODO: Append best observed values and parameters to experiment dataframe.
-
 from abc import ABC, abstractmethod
 import time
 from typing import Optional, Union
@@ -60,6 +57,7 @@ class BayesianOptimization(Optimizer):
         self.random_seed = random_seed
         self.monitor = monitor
         self.client = AxClient(generation_strategy=strategy, random_seed=random_seed)
+        self.batch_execution_times = []
 
     @staticmethod
     def get_batch_size(
@@ -127,18 +125,17 @@ class BayesianOptimization(Optimizer):
         :param step: Contains optimization loop specification.
         :type step: GenerationStep
         """
-        num_batches = self.get_num_batches(
+        self.num_batches = self.get_num_batches(
             num_trials=step.num_trials, batch_size=step.max_parallelism
         )
 
-        self.batch_execution_times = []
-        for batch_number in range(num_batches):
+        for batch_number in range(self.num_batches):
             t0 = time.time()
 
             # Determine batch size.
             batch_size = self.get_batch_size(
                 batch_number=batch_number,
-                num_batches=num_batches,
+                num_batches=self.num_batches,
                 batch_size=step.max_parallelism,
                 num_trials=step.num_trials,
             )
@@ -159,7 +156,7 @@ class BayesianOptimization(Optimizer):
             ]
 
             # Log batch execution time.
-            self.batch_execution_times.append(time.time() - t0)
+            self.batch_execution_times.extend([time.time() - t0] * batch_size)
 
             # Log metrics.
             if self.monitor:
@@ -198,6 +195,7 @@ class GridSearch(Optimizer):
         self.num_trials = strategy  # <- This is for compatability with hydra-zen
         self.monitor = monitor
         self.client = AxClient()
+        self.batch_execution_times = []
 
     def run(self, name: str = None) -> None:
         """Run grid search using provided configurations."""
@@ -219,7 +217,6 @@ class GridSearch(Optimizer):
 
     def _run_loop(self) -> None:
         """Run the grid search."""
-        self.batch_execution_times = []
         for parameters in get_parameterized_grid(
             search_space=self.search_space, num_samples=self.num_trials
         ):
