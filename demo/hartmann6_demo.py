@@ -19,6 +19,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parents[1]))
 from oao.objective import NoiselessFormattedObjective
 from oao.optimizer import BayesianOptimization, GridSearch
+from oao.results import get_results
 from oao.space import SearchParameter, SearchSpace
 
 
@@ -81,15 +82,30 @@ def main():
         strategy=gs,
     )
     opt_bo.run(name="demo_bo")
+    opt = opt_bo
 
     opt_gs = GridSearch(
         objective=objective,
         search_space=space,
-        num_trials=4,
+        strategy=2,
     )
     opt_gs.run(name="demo_gs")
+    opt = opt_gs
 
-    # Save the results to a JSON file.
+    # Save the results to CSV files.
+    get_results(
+        opt_bo.client,
+        times=opt.batch_execution_times,
+        minimize=objective.properties.minimize,
+    ).to_csv("demo/results_bo.csv")
+
+    get_results(
+        opt_gs.client,
+        times=opt.batch_execution_times,
+        minimize=objective.properties.minimize,
+    ).to_csv("demo/results_gs.csv")
+
+    # Save the clients to JSON files.
     opt_bo.client.save_to_json_file("demo/experiment_bo.json")
     opt_gs.client.save_to_json_file("demo/experiment_gs.json")
 
