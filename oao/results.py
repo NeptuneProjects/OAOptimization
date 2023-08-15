@@ -33,10 +33,15 @@ def _get_best_trial(client: AxClient, minimize: bool = False) -> pd.DataFrame:
         [[trial.objective_mean for trial in client.experiment.trials.values()]]
     )
     best_values, best_trials = _get_max_with_index(
-        objective_means if not minimize else -objective_means
+        -objective_means if minimize else objective_means
     )
     best_parameters = [client.experiment.trials[i].arm.parameters for i in best_trials]
-    df_values = pd.DataFrame({"best_trial": best_trials, "best_value": best_values})
+    df_values = pd.DataFrame(
+        {
+            "best_trial": best_trials,
+            "best_value": -best_values if minimize else best_values,
+        }
+    )
     df_params = pd.DataFrame(best_parameters).rename(
         columns={k: f"best_{k}" for k in best_parameters[0].keys()}
     )
