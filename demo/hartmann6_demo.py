@@ -84,7 +84,7 @@ def main():
     # search_space = [
     #     {"name": f"x{i + 1}", "type": "choice", "values": [0.0, 1.0]} for i in range(6)
     # ]
-    
+
     space = SearchSpace([SearchParameter(**d) for d in search_space])
 
     # Instantiate and run the optimizers.
@@ -103,8 +103,6 @@ def main():
     # )
     # opt_gs.run(name="demo_gs")
     # opt = opt_gs
-
-    
 
     # # Save the results to CSV files.
     # get_results(
