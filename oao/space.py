@@ -17,7 +17,6 @@ class SearchParameter:
     value: Optional[str] = None
     value_type: Optional[type] = None
     is_ordered: Optional[bool] = None
-    # sort_values: Optional[bool] = None
     log_scale: Optional[bool] = False
 
 
