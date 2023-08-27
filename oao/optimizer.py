@@ -1,17 +1,20 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 import time
 from typing import Optional, Union
 import warnings
 
-from ax.service.ax_client import AxClient
 from ax.modelbridge.generation_strategy import GenerationStep, GenerationStrategy
+from ax.modelbridge.registry import Models
+from ax.service.ax_client import AxClient
 import numpy as np
 
 from oao.objective import Objective
 from oao.space import SearchSpace, get_parameterized_grid
+from oao.strategy import GridStrategy
 
 
 class Optimizer(ABC):
@@ -26,38 +29,6 @@ class Optimizer(ABC):
     def _create_experiment(self, name: str) -> None:
         """Create an Ax experiment."""
         pass
-
-
-class BayesianOptimization(Optimizer):
-    def __init__(
-        self,
-        objective: Objective,
-        search_space: SearchSpace,
-        strategy: GenerationStrategy,
-        random_seed: Optional[int] = None,
-        monitor: Optional[callable] = None,
-    ) -> None:
-        """
-        Initialize Bayesian optimization strategy.
-
-        :param objective: Objective function for optimization; must be callable.
-        :type objective: Objective
-        :param search_space: Search space definition.
-        :type search_space: SearchSpace
-        :param strategy: Specify the generation strategy for optimization.
-        :type strategy: GenerationStrategy
-        :param random_seed: Set the random seed, defaults to None
-        :type random_seed: Optional[int], optional
-        :param monitor: Callable to log metrics, defaults to None
-        :type monitor: Optional[callable], optional
-        """
-        self.objective = objective
-        self.search_space = search_space
-        self.strategy = strategy
-        self.random_seed = random_seed
-        self.monitor = monitor
-        self.client = AxClient(generation_strategy=strategy, random_seed=random_seed)
-        self.batch_execution_times = []
 
     @staticmethod
     def get_batch_size(
@@ -98,6 +69,38 @@ class BayesianOptimization(Optimizer):
         """
         return np.ceil(num_trials / batch_size).astype(int)
 
+
+class BayesianOptimization(Optimizer):
+    def __init__(
+        self,
+        objective: Objective,
+        search_space: SearchSpace,
+        strategy: GenerationStrategy,
+        random_seed: Optional[int] = None,
+        monitor: Optional[callable] = None,
+    ) -> None:
+        """
+        Initialize Bayesian optimization strategy.
+
+        :param objective: Objective function for optimization; must be callable.
+        :type objective: Objective
+        :param search_space: Search space definition.
+        :type search_space: SearchSpace
+        :param strategy: Specify the generation strategy for optimization.
+        :type strategy: GenerationStrategy
+        :param random_seed: Set the random seed, defaults to None
+        :type random_seed: Optional[int], optional
+        :param monitor: Callable to log metrics, defaults to None
+        :type monitor: Optional[callable], optional
+        """
+        self.objective = objective
+        self.search_space = search_space
+        self.strategy = strategy
+        self.random_seed = random_seed
+        self.monitor = monitor
+        self.client = AxClient(generation_strategy=strategy, random_seed=random_seed)
+        self.batch_execution_times = []
+
     def run(self, name: str = None) -> None:
         """Runs the optimization using provided configurations."""
         self._create_experiment(name)
@@ -125,6 +128,9 @@ class BayesianOptimization(Optimizer):
         :param step: Contains optimization loop specification.
         :type step: GenerationStep
         """
+        if step.max_parallelism is None:
+            step.max_parallelism = 1
+
         self.num_batches = self.get_num_batches(
             num_trials=step.num_trials, batch_size=step.max_parallelism
         )
@@ -143,16 +149,26 @@ class BayesianOptimization(Optimizer):
             # Use sampler or acquisition function to generate trials.
             trials, _ = self.client.get_next_trials(max_trials=batch_size)
 
+            # # Evaluate trials.
+            # results = {
+            #     trial_index: self.objective(parameters)
+            #     for trial_index, parameters in trials.items()
+            # }
+
+            # # Mark trials as complete and update model.
+            # [
+            #     self.client.complete_trial(trial_index, raw_data=result)
+            #     for trial_index, result in results.items()
+            # ]
+
             # Evaluate trials.
-            results = {
-                trial_index: self.objective(parameters)
-                for trial_index, parameters in trials.items()
-            }
+            with ThreadPoolExecutor(max_workers=batch_size) as executor:
+                results = executor.map(self.objective, trials.values())
 
             # Mark trials as complete and update model.
             [
                 self.client.complete_trial(trial_index, raw_data=result)
-                for trial_index, result in results.items()
+                for trial_index, result in zip(trials.keys(), results)
             ]
 
             # Log batch execution time.
@@ -172,7 +188,7 @@ class GridSearch(Optimizer):
         self,
         objective: Objective,
         search_space: SearchSpace,
-        strategy: Union[int, list[int]],
+        strategy: GridStrategy,
         monitor: Optional[callable] = None,
     ) -> None:
         """
@@ -192,7 +208,8 @@ class GridSearch(Optimizer):
         """
         self.objective = objective
         self.search_space = search_space
-        self.num_trials = strategy  # <- This is for compatability with hydra-zen
+        self.num_trials = strategy.num_trials
+        self.max_parallelism = strategy.max_parallelism
         self.monitor = monitor
         self.client = AxClient()
         self.batch_execution_times = []
@@ -216,23 +233,61 @@ class GridSearch(Optimizer):
         )
 
     def _run_loop(self) -> None:
-        """Run the grid search."""
-        for parameters in get_parameterized_grid(
-            search_space=self.search_space, num_samples=self.num_trials
-        ):
-            t0 = time.time()
-            # Attach new trial from grid parameterization.
-            params, trial_index = self.client.attach_trial(parameters=parameters)
+        if self.max_parallelism is None:
+            self.max_parallelism = 1
 
-            # Evaluate trial.
-            self.client.complete_trial(
-                trial_index=trial_index,
-                raw_data=self.objective(params),
+        # Generate factorial parameterization.
+        factorial = Models.FACTORIAL(search_space=self.client.experiment.search_space)
+        factorial_run = factorial.gen(n=-1)
+
+        # Attach trials.
+        param_list, trial_indexes = list(
+            zip(
+                *[
+                    self.client.attach_trial(parameters=arm.parameters)
+                    for arm in factorial_run.arms
+                ]
             )
+        )
 
-            # Log batch execution time.
-            self.batch_execution_times.append(time.time() - t0)
+        # Start timer.
+        t0 = time.time()
 
-            # Log metrics.
-            if self.monitor:
-                self.monitor(self.client)
+        # Evaluate trials.
+        with ThreadPoolExecutor(max_workers=self.max_parallelism) as executor:
+            results = executor.map(self.objective, param_list)
+
+        # Mark trials as complete and update model.
+        [
+            self.client.complete_trial(trial_index, raw_data=result)
+            for trial_index, result in zip(trial_indexes, results)
+        ]
+
+        # Log batch execution time.
+        self.batch_execution_times.extend([time.time() - t0] * len(trial_indexes))
+
+        # Log metrics.
+        if self.monitor:
+            self.monitor(self.client)
+
+    # def _run_loop_slow(self) -> None:
+    #     """Run the grid search."""
+    #     for parameters in get_parameterized_grid(
+    #         search_space=self.search_space, num_samples=self.num_trials
+    #     ):
+    #         t0 = time.time()
+    #         # Attach new trial from grid parameterization.
+    #         params, trial_index = self.client.attach_trial(parameters=parameters)
+
+    #         # Evaluate trial.
+    #         self.client.complete_trial(
+    #             trial_index=trial_index,
+    #             raw_data=self.objective(params),
+    #         )
+
+    #         # Log batch execution time.
+    #         self.batch_execution_times.append(time.time() - t0)
+
+    #         # Log metrics.
+    #         if self.monitor:
+    #             self.monitor(self.client)

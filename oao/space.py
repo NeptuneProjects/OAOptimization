@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from dataclasses import dataclass
@@ -12,8 +11,13 @@ import numpy as np
 class SearchParameter:
     name: str
     type: str
-    bounds: list[Union[float, int]]
     value_type: Optional[str] = None
+    bounds: Optional[list[Union[float, int]]] = None
+    values: Optional[str] = None
+    value: Optional[str] = None
+    value_type: Optional[type] = None
+    is_ordered: Optional[bool] = None
+    # sort_values: Optional[bool] = None
     log_scale: Optional[bool] = False
 
 

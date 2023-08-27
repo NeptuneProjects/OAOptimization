@@ -3,9 +3,9 @@
 
 from pathlib import Path
 import sys
+import time
 
 from ax.modelbridge.generation_strategy import GenerationStep, GenerationStrategy
-
 from ax.modelbridge.registry import Models
 from ax.models.torch.botorch_modular.surrogate import Surrogate
 from ax.service.ax_client import AxClient
@@ -21,6 +21,7 @@ from oao.objective import NoiselessFormattedObjective
 from oao.optimizer import BayesianOptimization, GridSearch
 from oao.results import get_results
 from oao.space import SearchParameter, SearchSpace
+from oao.strategy import GridStrategy
 
 
 class Hartmann6Objective:
@@ -28,6 +29,7 @@ class Hartmann6Objective:
 
     def evaluate(self, parameters) -> dict:
         x = np.array([parameters.get(f"x{i+1}") for i in range(6)])
+        time.sleep(1.0)
         return hartmann6(x)
 
 
@@ -42,30 +44,35 @@ def main():
         [
             GenerationStep(
                 model=Models.SOBOL,
-                num_trials=16,
-                max_parallelism=4,
+                num_trials=64,
+                max_parallelism=64,
                 model_kwargs={"seed": 0},
             ),
             GenerationStep(
-                model=Models.BOTORCH_MODULAR,
+                model=Models.GPEI,
                 num_trials=16,
                 max_parallelism=4,
-                model_kwargs={
-                    "surrogate": Surrogate(
-                        botorch_model_class=SingleTaskGP,
-                        mll_class=ExactMarginalLogLikelihood,
-                    ),
-                    "botorch_acqf_class": qExpectedImprovement,
-                },
-                model_gen_kwargs={
-                    "model_gen_options": {
-                        "optimizer_kwargs": {
-                            "num_restarts": 40,
-                            "raw_samples": 1024,
-                        }
-                    }
-                },
-            ),
+            )
+            # GenerationStep(
+            #     model=Models.BOTORCH_MODULAR,
+            #     num_trials=16,
+            #     max_parallelism=4,
+            #     model_kwargs={
+            #         "surrogate": Surrogate(
+            #             botorch_model_class=SingleTaskGP,
+            #             mll_class=ExactMarginalLogLikelihood,
+            #         ),
+            #         "botorch_acqf_class": qExpectedImprovement,
+            #     },
+            #     model_gen_kwargs={
+            #         "model_gen_options": {
+            #             "optimizer_kwargs": {
+            #                 "num_restarts": 40,
+            #                 "raw_samples": 1024,
+            #             }
+            #         }
+            #     },
+            # ),
         ]
     )
 
@@ -73,6 +80,11 @@ def main():
     search_space = [
         {"name": f"x{i + 1}", "type": "range", "bounds": [0.0, 1.0]} for i in range(6)
     ]
+
+    # search_space = [
+    #     {"name": f"x{i + 1}", "type": "choice", "values": [0.0, 1.0]} for i in range(6)
+    # ]
+    
     space = SearchSpace([SearchParameter(**d) for d in search_space])
 
     # Instantiate and run the optimizers.
@@ -84,36 +96,38 @@ def main():
     opt_bo.run(name="demo_bo")
     opt = opt_bo
 
-    opt_gs = GridSearch(
-        objective=objective,
-        search_space=space,
-        strategy=2,
-    )
-    opt_gs.run(name="demo_gs")
-    opt = opt_gs
+    # opt_gs = GridSearch(
+    #     objective=objective,
+    #     search_space=space,
+    #     strategy=GridStrategy(num_trials=2, max_parallelism=4),
+    # )
+    # opt_gs.run(name="demo_gs")
+    # opt = opt_gs
 
-    # Save the results to CSV files.
-    get_results(
-        opt_bo.client,
-        times=opt.batch_execution_times,
-        minimize=objective.properties.minimize,
-    ).to_csv("demo/results_bo.csv")
+    
 
-    get_results(
-        opt_gs.client,
-        times=opt.batch_execution_times,
-        minimize=objective.properties.minimize,
-    ).to_csv("demo/results_gs.csv")
+    # # Save the results to CSV files.
+    # get_results(
+    #     opt_bo.client,
+    #     times=opt.batch_execution_times,
+    #     minimize=objective.properties.minimize,
+    # ).to_csv("demo/results_bo.csv")
 
-    # Save the clients to JSON files.
-    opt_bo.client.save_to_json_file("demo/experiment_bo.json")
-    opt_gs.client.save_to_json_file("demo/experiment_gs.json")
+    # get_results(
+    #     opt_gs.client,
+    #     times=opt.batch_execution_times,
+    #     minimize=objective.properties.minimize,
+    # ).to_csv("demo/results_gs.csv")
 
-    # Load the results from the JSON file and render the optimization trace.
-    restored_client_bo = AxClient.load_from_json_file("demo/experiment_bo.json")
-    restored_client_gs = AxClient.load_from_json_file("demo/experiment_gs.json")
-    render(restored_client_bo.get_optimization_trace(objective_optimum=hartmann6.fmin))
-    render(restored_client_gs.get_optimization_trace(objective_optimum=hartmann6.fmin))
+    # # Save the clients to JSON files.
+    # opt_bo.client.save_to_json_file("demo/experiment_bo.json")
+    # opt_gs.client.save_to_json_file("demo/experiment_gs.json")
+
+    # # Load the results from the JSON file and render the optimization trace.
+    # restored_client_bo = AxClient.load_from_json_file("demo/experiment_bo.json")
+    # restored_client_gs = AxClient.load_from_json_file("demo/experiment_gs.json")
+    # render(restored_client_bo.get_optimization_trace(objective_optimum=hartmann6.fmin))
+    # render(restored_client_gs.get_optimization_trace(objective_optimum=hartmann6.fmin))
 
 
 if __name__ == "__main__":
