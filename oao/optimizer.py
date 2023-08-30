@@ -2,13 +2,11 @@
 
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
 import time
-from typing import Optional, Union
+from typing import Optional
 import warnings
 
 from ax.modelbridge.generation_strategy import GenerationStep, GenerationStrategy
-from ax.modelbridge.registry import Models
 from ax.service.ax_client import AxClient
 import numpy as np
 
@@ -149,18 +147,6 @@ class BayesianOptimization(Optimizer):
             # Use sampler or acquisition function to generate trials.
             trials, _ = self.client.get_next_trials(max_trials=batch_size)
 
-            # # Evaluate trials.
-            # results = {
-            #     trial_index: self.objective(parameters)
-            #     for trial_index, parameters in trials.items()
-            # }
-
-            # # Mark trials as complete and update model.
-            # [
-            #     self.client.complete_trial(trial_index, raw_data=result)
-            #     for trial_index, result in results.items()
-            # ]
-
             # Evaluate trials.
             with ThreadPoolExecutor(max_workers=batch_size) as executor:
                 results = executor.map(self.objective, trials.values())
@@ -236,18 +222,13 @@ class GridSearch(Optimizer):
         if self.max_parallelism is None:
             self.max_parallelism = 1
 
-        # Generate factorial parameterization.
-        factorial = Models.FACTORIAL(search_space=self.client.experiment.search_space)
-        factorial_run = factorial.gen(n=-1)
+        parameters = get_parameterized_grid(
+            search_space=self.search_space, num_samples=self.num_trials
+        )
 
         # Attach trials.
         param_list, trial_indexes = list(
-            zip(
-                *[
-                    self.client.attach_trial(parameters=arm.parameters)
-                    for arm in factorial_run.arms
-                ]
-            )
+            zip(*[self.client.attach_trial(parameters=p) for p in parameters])
         )
 
         # Start timer.
@@ -269,25 +250,3 @@ class GridSearch(Optimizer):
         # Log metrics.
         if self.monitor:
             self.monitor(self.client)
-
-    # def _run_loop_slow(self) -> None:
-    #     """Run the grid search."""
-    #     for parameters in get_parameterized_grid(
-    #         search_space=self.search_space, num_samples=self.num_trials
-    #     ):
-    #         t0 = time.time()
-    #         # Attach new trial from grid parameterization.
-    #         params, trial_index = self.client.attach_trial(parameters=parameters)
-
-    #         # Evaluate trial.
-    #         self.client.complete_trial(
-    #             trial_index=trial_index,
-    #             raw_data=self.objective(params),
-    #         )
-
-    #         # Log batch execution time.
-    #         self.batch_execution_times.append(time.time() - t0)
-
-    #         # Log metrics.
-    #         if self.monitor:
-    #             self.monitor(self.client)
