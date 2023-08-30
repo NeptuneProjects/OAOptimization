@@ -12,7 +12,7 @@
 acoustic parameters in the ocean using uninformed search methods and 
 Bayesian optimization.
 """
-__version__ = "0.2.0"
+__version__ = "1.0.0"
 
 from ax.storage.botorch_modular_registry import ACQUISITION_FUNCTION_REGISTRY
 from ax.storage.botorch_modular_registry import REVERSE_ACQUISITION_FUNCTION_REGISTRY
