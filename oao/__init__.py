@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 # Copyright 2023 by William Jenkins
 # Scripps Institution of Oceanography
 # University of California San Diego
