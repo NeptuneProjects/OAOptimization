@@ -1,24 +1,13 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from dataclasses import dataclass
-from typing import Optional
-
-from ax.modelbridge.generation_strategy import GenerationStep, GenerationStrategy
+from typing import Optional, Union
 
 
-@dataclass
-class GenerationStepConfig:
-    def construct(self) -> GenerationStep:
-        raise NotImplementedError
-
-
-@dataclass
-class GenerationStrategyConfig:
-    steps: list[GenerationStep]
-    name: Optional[str] = None
-
-    def construct(self) -> GenerationStrategy:
-        return GenerationStrategy(
-            steps=[step.construct() for step in self.steps], name=self.name
-        )
+class GridStrategy:
+    def __init__(
+        self,
+        num_trials: Union[int, list[int]],
+        max_parallelism: Optional[int] = None,
+    ) -> None:
+        self.num_trials = num_trials
+        self.max_parallelism = max_parallelism
