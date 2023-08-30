@@ -1,5 +1,7 @@
 # Ocean Acoustics Optimization
 
+[![DOI](https://zenodo.org/badge/589506707.svg)](https://zenodo.org/badge/latestdoi/589506707)
+
 This package contains backend code for research on Bayesian optimization for estimation of ocean acoustic parameters.
 The package is under active development.
 
