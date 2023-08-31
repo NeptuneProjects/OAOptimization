@@ -11,7 +11,7 @@ from ax.service.ax_client import AxClient
 import numpy as np
 
 from oao.objective import Objective
-from oao.space import SearchSpace, get_parameterized_grid
+from oao.space import SearchSpace, get_parameterized_grid, get_parameterized_sobol
 from oao.strategy import GridStrategy
 
 
@@ -250,3 +250,98 @@ class GridSearch(Optimizer):
         # Log metrics.
         if self.monitor:
             self.monitor(self.client)
+
+
+class QuasiRandom(Optimizer):
+    def __init__(
+        self,
+        objective: Objective,
+        search_space: SearchSpace,
+        strategy: GenerationStrategy,
+        random_seed: Optional[int] = None,
+        monitor: Optional[callable] = None,
+    ) -> None:
+        """
+        Initialize Bayesian optimization strategy.
+
+        :param objective: Objective function for optimization; must be callable.
+        :type objective: Objective
+        :param search_space: Search space definition.
+        :type search_space: SearchSpace
+        :param strategy: Specify the generation strategy for optimization.
+        :type strategy: GenerationStrategy
+        :param random_seed: Set the random seed, defaults to None
+        :type random_seed: Optional[int], optional
+        :param monitor: Callable to log metrics, defaults to None
+        :type monitor: Optional[callable], optional
+        """
+        self.objective = objective
+        self.search_space = search_space
+        self.strategy = strategy
+        self.random_seed = random_seed
+        self.monitor = monitor
+        self.client = AxClient(generation_strategy=strategy, random_seed=random_seed)
+        self.batch_execution_times = []
+
+    def run(self, name: str = None) -> None:
+        """Runs the optimization using provided configurations."""
+        self._create_experiment(name)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=FutureWarning)
+            self._run_steps()
+
+    def _create_experiment(self, name: str) -> None:
+        """
+        Create an Ax experiment.
+
+        :param name: Name of the experiment.
+        :type name: str
+        """
+        self.client.create_experiment(
+            name=name,
+            parameters=self.search_space.to_dict(),
+            objectives={self.objective.name: self.objective.properties},
+        )
+
+    def _run_loop(self, step: GenerationStep) -> None:
+        """
+        Run a single step of the generation strategy.
+
+        :param step: Contains optimization loop specification.
+        :type step: GenerationStep
+        """
+        if step.max_parallelism is None:
+            step.max_parallelism = 1
+
+        parameters = get_parameterized_sobol(
+            search_space=self.search_space, num_samples=step.num_trials
+        )
+
+        # Attach trials.
+        param_list, trial_indexes = list(
+            zip(*[self.client.attach_trial(parameters=p) for p in parameters])
+        )
+
+        # Start timer.
+        t0 = time.time()
+
+        # Evaluate trials.
+        with ThreadPoolExecutor(max_workers=step.max_parallelism) as executor:
+            results = executor.map(self.objective, param_list)
+
+        # Mark trials as complete and update model.
+        [
+            self.client.complete_trial(trial_index, raw_data=result)
+            for trial_index, result in zip(trial_indexes, results)
+        ]
+
+        # Log batch execution time.
+        self.batch_execution_times.extend([time.time() - t0] * len(trial_indexes))
+
+        # Log metrics.
+        if self.monitor:
+            self.monitor(self.client)
+
+    def _run_steps(self) -> None:
+        """Run the steps of the generation strategy."""
+        [self._run_loop(step) for step in self.strategy._steps]
