@@ -98,29 +98,36 @@ def main():
     opt_qr.run(name="demo_bo")
 
     ## Save the results to CSV files. ==================================
-    opt = opt_gs  # Set which optimizer to save/load.
-
     get_results(
         opt_bo.client,
-        times=opt.batch_execution_times,
+        times=opt_bo.batch_execution_times,
         minimize=objective.properties.minimize,
     ).to_csv("demo/results_bo.csv")
 
     get_results(
         opt_gs.client,
-        times=opt.batch_execution_times,
+        times=opt_gs.batch_execution_times,
         minimize=objective.properties.minimize,
     ).to_csv("demo/results_gs.csv")
+
+    get_results(
+        opt_qr.client,
+        times=opt_qr.batch_execution_times,
+        minimize=objective.properties.minimize,
+    ).to_csv("demo/results_qr.csv")
 
     # Save the clients to JSON files.
     opt_bo.client.save_to_json_file("demo/experiment_bo.json")
     opt_gs.client.save_to_json_file("demo/experiment_gs.json")
+    opt_qr.client.save_to_json_file("demo/experiment_qr.json")
 
     # Load the results from the JSON file and render the optimization trace.
     restored_client_bo = AxClient.load_from_json_file("demo/experiment_bo.json")
     restored_client_gs = AxClient.load_from_json_file("demo/experiment_gs.json")
+    restored_client_qr = AxClient.load_from_json_file("demo/experiment_qr.json")
     render(restored_client_bo.get_optimization_trace(objective_optimum=hartmann6.fmin))
     render(restored_client_gs.get_optimization_trace(objective_optimum=hartmann6.fmin))
+    render(restored_client_qr.get_optimization_trace(objective_optimum=hartmann6.fmin))
 
 
 if __name__ == "__main__":
