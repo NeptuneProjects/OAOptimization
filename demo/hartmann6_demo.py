@@ -44,15 +44,15 @@ def main():
         [
             GenerationStep(
                 model=Models.SOBOL,
-                num_trials=64,
-                max_parallelism=64,
+                num_trials=1024,
+                max_parallelism=1024,
                 model_kwargs={"seed": 0},
             ),
-            GenerationStep(
-                model=Models.GPEI,
-                num_trials=16,
-                max_parallelism=4,
-            )
+            # GenerationStep(
+            #     model=Models.GPEI,
+            #     num_trials=16,
+            #     max_parallelism=4,
+            # )
             # GenerationStep(
             #     model=Models.BOTORCH_MODULAR,
             #     num_trials=16,
