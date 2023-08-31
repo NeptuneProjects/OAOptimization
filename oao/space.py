@@ -5,6 +5,7 @@ from itertools import product
 from typing import Optional, Union
 
 import numpy as np
+import scipy.stats.qmc
 
 
 @dataclass
@@ -110,6 +111,39 @@ def get_parameterized_grid(
     """
     bounds = [tuple(p.bounds) for p in search_space.parameters]
     param_array = get_parameter_grid_array(bounds=bounds, num_samples=num_samples)
+    return [
+        {p.name: i for i, p in zip(row, search_space.parameters)} for row in param_array
+    ]
+
+
+def get_parameterized_sobol(search_space: SearchSpace, num_samples: int) -> list[dict]:
+    """
+    Given a search space, return a list of parameterized Sobol sequences.
+
+    :param search_space: Search space to parameterize with Sobol sequence.
+    :type search_space: SearchSpace
+    :param num_samples: Number of samples to take along each dimension of the
+        Sobol sequence.
+    :return: A list of parameterized Sobol sequences.
+    :rtype: list[dict]
+    """
+    samples = scipy.stats.qmc.Sobol(d=len(search_space.parameters)).random(num_samples)
+
+    param_array = np.zeros_like(samples)
+    for i in range(len(search_space.parameters)):
+        sample_min = 0.0
+        sample_max = 1.0
+        sample_range = sample_max - sample_min
+
+        data_min = search_space.parameters[i].bounds[0]
+        data_max = search_space.parameters[i].bounds[1]
+        data_range = data_max - data_min
+
+        scaled_data = (
+            data_min + (samples[:, i] - sample_min) * data_range / sample_range
+        )
+        param_array[:, i] = scaled_data
+
     return [
         {p.name: i for i, p in zip(row, search_space.parameters)} for row in param_array
     ]

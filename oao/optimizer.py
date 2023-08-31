@@ -11,7 +11,7 @@ from ax.service.ax_client import AxClient
 import numpy as np
 
 from oao.objective import Objective
-from oao.space import SearchSpace, get_parameterized_grid
+from oao.space import SearchSpace, get_parameterized_grid, get_parameterized_sobol
 from oao.strategy import GridStrategy
 
 
@@ -252,8 +252,7 @@ class GridSearch(Optimizer):
             self.monitor(self.client)
 
 
-# TODO: Create Quasirandom Optimizer class.
-class QuasiRandomOptimizer(Optimizer):
+class QuasiRandom(Optimizer):
     def __init__(
         self,
         objective: Objective,
@@ -314,40 +313,34 @@ class QuasiRandomOptimizer(Optimizer):
         if step.max_parallelism is None:
             step.max_parallelism = 1
 
-        self.num_batches = self.get_num_batches(
-            num_trials=step.num_trials, batch_size=step.max_parallelism
+        parameters = get_parameterized_sobol(
+            search_space=self.search_space, num_samples=step.num_trials
         )
 
-        for batch_number in range(self.num_batches):
-            t0 = time.time()
+        # Attach trials.
+        param_list, trial_indexes = list(
+            zip(*[self.client.attach_trial(parameters=p) for p in parameters])
+        )
 
-            # Determine batch size.
-            batch_size = self.get_batch_size(
-                batch_number=batch_number,
-                num_batches=self.num_batches,
-                batch_size=step.max_parallelism,
-                num_trials=step.num_trials,
-            )
+        # Start timer.
+        t0 = time.time()
 
-            # Use sampler or acquisition function to generate trials.
-            trials, _ = self.client.get_next_trials(max_trials=batch_size)
+        # Evaluate trials.
+        with ThreadPoolExecutor(max_workers=step.max_parallelism) as executor:
+            results = executor.map(self.objective, param_list)
 
-            # Evaluate trials.
-            with ThreadPoolExecutor(max_workers=batch_size) as executor:
-                results = executor.map(self.objective, trials.values())
+        # Mark trials as complete and update model.
+        [
+            self.client.complete_trial(trial_index, raw_data=result)
+            for trial_index, result in zip(trial_indexes, results)
+        ]
 
-            # Mark trials as complete and update model.
-            [
-                self.client.complete_trial(trial_index, raw_data=result)
-                for trial_index, result in zip(trials.keys(), results)
-            ]
+        # Log batch execution time.
+        self.batch_execution_times.extend([time.time() - t0] * len(trial_indexes))
 
-            # Log batch execution time.
-            self.batch_execution_times.extend([time.time() - t0] * batch_size)
-
-            # Log metrics.
-            if self.monitor:
-                self.monitor(self.client)
+        # Log metrics.
+        if self.monitor:
+            self.monitor(self.client)
 
     def _run_steps(self) -> None:
         """Run the steps of the generation strategy."""

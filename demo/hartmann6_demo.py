@@ -18,7 +18,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 from oao.objective import NoiselessFormattedObjective
-from oao.optimizer import BayesianOptimization, GridSearch
+from oao.optimizer import BayesianOptimization, GridSearch, QuasiRandom
 from oao.results import get_results
 from oao.space import SearchParameter, SearchSpace
 from oao.strategy import GridStrategy
@@ -44,8 +44,8 @@ def main():
         [
             GenerationStep(
                 model=Models.SOBOL,
-                num_trials=1024,
-                max_parallelism=1024,
+                num_trials=512,
+                max_parallelism=16,
                 model_kwargs={"seed": 0},
             ),
             # GenerationStep(
@@ -78,7 +78,7 @@ def main():
 
     # Define the search space.
     search_space = [
-        {"name": f"x{i + 1}", "type": "range", "bounds": [0.0, 1.0]} for i in range(6)
+        {"name": f"x{i + 1}", "type": "range", "bounds": [-2.0, 2.0]} for i in range(6)
     ]
 
     # search_space = [
@@ -88,13 +88,21 @@ def main():
     space = SearchSpace([SearchParameter(**d) for d in search_space])
 
     # Instantiate and run the optimizers.
-    opt_bo = BayesianOptimization(
+    # opt_bo = BayesianOptimization(
+    #     objective=objective,
+    #     search_space=space,
+    #     strategy=gs,
+    # )
+    # opt_bo.run(name="demo_bo")
+    # opt = opt_bo
+
+    opt_qr = QuasiRandom(
         objective=objective,
         search_space=space,
         strategy=gs,
     )
-    opt_bo.run(name="demo_bo")
-    opt = opt_bo
+    opt_qr.run(name="demo_bo")
+    opt = opt_qr
 
     # opt_gs = GridSearch(
     #     objective=objective,
