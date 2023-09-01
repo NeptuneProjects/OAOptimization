@@ -37,7 +37,7 @@ def main():
 
     # Define the search space.
     search_space = [
-        {"name": f"x{i + 1}", "type": "range", "bounds": [-2.0, 2.0]} for i in range(6)
+        {"name": f"x{i + 1}", "type": "range", "bounds": [0.0, 1.0]} for i in range(6)
     ]
     space = SearchSpace([SearchParameter(**d) for d in search_space])
 
@@ -47,13 +47,13 @@ def main():
         [
             GenerationStep(
                 model=Models.SOBOL,
-                num_trials=64,
-                max_parallelism=16,
+                num_trials=32,
+                max_parallelism=32,
                 model_kwargs={"seed": 0},
             ),
             GenerationStep(
                 model=Models.GPEI,
-                num_trials=16,
+                num_trials=32,
                 max_parallelism=4,
             ),
         ]
@@ -68,7 +68,7 @@ def main():
 
     ## Grid Search =====================================================
     # Define the generation strategy.
-    gs = GridStrategy(num_trials=2, max_parallelism=4)
+    gs = GridStrategy(num_trials=2, max_parallelism=64)
     # Instantiate and run the optimizers.
     opt_gs = GridSearch(
         objective=objective,
@@ -84,7 +84,7 @@ def main():
             GenerationStep(
                 model=Models.SOBOL,
                 num_trials=64,
-                max_parallelism=16,
+                max_parallelism=64,
                 model_kwargs={"seed": 0},
             ),
         ]
